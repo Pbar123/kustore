@@ -14,7 +14,7 @@ export function Header() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white border-t border-gray-200 fixed bottom-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -30,7 +30,7 @@ export function Header() {
               to="/" 
               className={`px-3 py-2 text-sm font-medium transition-colors ${
                 isActive('/') 
-                  ? 'text-black border-b-2 border-black' 
+                  ? 'text-black border-t-2 border-black' 
                   : 'text-gray-900 hover:text-gray-600'
               }`}
             >
@@ -40,7 +40,7 @@ export function Header() {
               to="/info" 
               className={`px-3 py-2 text-sm font-medium transition-colors ${
                 isActive('/info') 
-                  ? 'text-black border-b-2 border-black' 
+                  ? 'text-black border-t-2 border-black' 
                   : 'text-gray-900 hover:text-gray-600'
               }`}
             >
@@ -50,7 +50,7 @@ export function Header() {
               to="/new" 
               className={`px-3 py-2 text-sm font-medium transition-colors ${
                 isActive('/new') 
-                  ? 'text-black border-b-2 border-black' 
+                  ? 'text-black border-t-2 border-black' 
                   : 'text-gray-900 hover:text-gray-600'
               }`}
             >
@@ -60,7 +60,7 @@ export function Header() {
               to="/all" 
               className={`px-3 py-2 text-sm font-medium transition-colors ${
                 isActive('/all') 
-                  ? 'text-black border-b-2 border-black' 
+                  ? 'text-black border-t-2 border-black' 
                   : 'text-gray-900 hover:text-gray-600'
               }`}
             >
@@ -96,7 +96,7 @@ export function Header() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200">
+        <div className="md:hidden bg-white border-b border-gray-200 absolute bottom-full left-0 right-0">
           <nav className="px-4 py-2 space-y-1">
             <Link 
               to="/" 
@@ -135,7 +135,7 @@ export function Header() {
               Весь ассортимент
             </Link>
           </nav>
-          <div className="px-4 py-2 border-t border-gray-200 flex items-center space-x-4">
+          <div className="px-4 py-2 border-b border-gray-200 flex items-center space-x-4">
             <AuthButton />
             <button 
               onClick={() => setIsCartOpen(true)}

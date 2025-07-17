@@ -17,7 +17,7 @@ function App() {
       <CartProvider>
         <Router>
           <TelegramWebAppInit />
-          <div className="min-h-screen bg-white">
+          <div className="min-h-screen bg-white pb-16">
             <Header />
             
             <Routes>
