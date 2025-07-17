@@ -71,7 +71,6 @@ export function AllProductsPage() {
     if (filters.priceRange[0] > minPrice || filters.priceRange[1] < maxPrice) count++;
     if (filters.categories.length > 0) count++;
     if (filters.sizes.length > 0) count++;
-    if (filters.colors.length > 0) count++;
     if (filters.brands.length > 0) count++;
     if (filters.isNew !== null) count++;
     if (filters.isOnSale !== null) count++;
