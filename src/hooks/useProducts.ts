@@ -114,7 +114,6 @@ export function useProducts() {
       return true;
     });
   };
-  return {
   const sortProducts = (products: Product[], sortBy: SortOption): Product[] => {
     const sorted = [...products];
     
@@ -144,6 +143,7 @@ export function useProducts() {
     }
   };
 
+  return {
     products,
     loading,
     error,
