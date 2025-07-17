@@ -15,8 +15,6 @@ export interface FilterState {
   sizes: string[];
   brands: string[];
   categories: string[];
-  isNew: boolean | null;
-  inStock: boolean;
 }
 
 export const defaultFilters: FilterState = {
@@ -24,8 +22,6 @@ export const defaultFilters: FilterState = {
   sizes: [],
   brands: [],
   categories: [],
-  isNew: null,
-  inStock: true,
 };
 
 export function FilterModal({ isOpen, onClose, products, onFiltersChange, currentFilters }: FilterModalProps) {
@@ -34,9 +30,7 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
     price: true,
     category: true,
     size: true,
-    color: false,
     brand: false,
-    status: true,
   });
 
   // Extract unique values from products database
@@ -152,8 +146,6 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
     if (filters.categories.length > 0) count++;
     if (filters.sizes.length > 0) count++;
     if (filters.brands.length > 0) count++;
-    if (filters.isNew !== null) count++;
-    if (!filters.inStock) count++;
     return count;
   };
 
@@ -306,7 +298,13 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
             </button>
             {expandedSections.size && (
               <div className="mt-4 space-y-4">
-                {availableSizes.clothing.length > 0 && (
+                {filters.categories.length === 0 && (
+                  <p className="text-sm text-gray-500 italic">
+                    Выберите категорию, чтобы увидеть доступные размеры
+                  </p>
+                )}
+                
+                {filters.categories.some(cat => ['shirts', 'dresses', 'sweaters', 'jackets', 'skirts'].includes(cat)) && availableSizes.clothing.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Одежда</h4>
                     <div className="flex flex-wrap gap-2">
@@ -327,7 +325,7 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
                   </div>
                 )}
                 
-                {availableSizes.pants.length > 0 && (
+                {filters.categories.includes('jeans') && availableSizes.pants.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Брюки/Джинсы</h4>
                     <div className="flex flex-wrap gap-2">
@@ -348,7 +346,7 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
                   </div>
                 )}
                 
-                {availableSizes.shoes.length > 0 && (
+                {filters.categories.includes('shoes') && availableSizes.shoes.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Обувь</h4>
                     <div className="flex flex-wrap gap-2">
@@ -369,9 +367,9 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
                   </div>
                 )}
                 
-                {availableSizes.other.length > 0 && (
+                {filters.categories.some(cat => ['bags', 'accessories'].includes(cat)) && availableSizes.other.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Другое</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Аксессуары</h4>
                     <div className="flex flex-wrap gap-2">
                       {availableSizes.other.map(size => (
                         <button
@@ -419,41 +417,6 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
             )}
           </div>
 
-          {/* Status Filters */}
-          <div>
-            <button
-              onClick={() => toggleSection('status')}
-              className="flex items-center justify-between w-full text-left"
-            >
-              <h3 className="text-lg font-medium text-gray-900">Статус</h3>
-              {expandedSections.status ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-            {expandedSections.status && (
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => handleBooleanFilter('isNew', true)}
-                    className={`px-3 py-2 border rounded-lg text-sm transition-colors ${
-                      filters.isNew === true
-                        ? 'bg-black text-white border-black'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-black'
-                    }`}
-                  >
-                    Новинки
-                  </button>
-                </div>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={filters.inStock}
-                    onChange={(e) => setFilters(prev => ({ ...prev, inStock: e.target.checked }))}
-                    className="rounded border-gray-300 text-black focus:ring-black"
-                  />
-                  <span className="text-gray-700">Только в наличии</span>
-                </label>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Footer */}
