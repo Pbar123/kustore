@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, ArrowRight } from 'lucide-react';
 import { ProductModal } from '../components/ProductModal';
-import { PromoCodeSection } from '../components/PromoCodeSection';
 import { useProducts } from '../hooks/useProducts';
 import { Product } from '../types';
 

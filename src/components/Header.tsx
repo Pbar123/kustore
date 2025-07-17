@@ -136,15 +136,6 @@ export function Header() {
               New
             </Link>
             <Link 
-              to="/promo" 
-              className={`block px-3 py-2 hover:bg-gray-50 ${
-                isActive('/promo') ? 'text-black font-medium' : 'text-gray-900'
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Промокоды
-            </Link>
-            <Link 
               to="/all" 
               className={`block px-3 py-2 hover:bg-gray-50 ${
                 isActive('/all') ? 'text-black font-medium' : 'text-gray-900'
