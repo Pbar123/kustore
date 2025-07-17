@@ -27,12 +27,6 @@ export function Header() {
       isActive: isActive('/all')
     },
     {
-      path: '/new',
-      icon: Sparkles,
-      label: 'Новинки',
-      isActive: isActive('/new')
-    },
-    {
       path: '/favorites',
       icon: Heart,
       label: 'Избранное',
@@ -43,12 +37,6 @@ export function Header() {
       icon: Package,
       label: 'Заказы',
       isActive: isActive('/orders')
-    },
-    {
-      path: '/info',
-      icon: Info,
-      label: 'Инфо',
-      isActive: isActive('/info')
     },
   ];
 

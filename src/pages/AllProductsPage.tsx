@@ -132,6 +132,20 @@ export function AllProductsPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Весь ассортимент</h1>
           <p className="text-lg text-gray-600">Полная коллекция нашей одежды</p>
+          <div className="flex items-center space-x-4 mt-4">
+            <Link 
+              to="/new"
+              className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
+            >
+              Только новинки →
+            </Link>
+            <Link 
+              to="/info"
+              className="text-gray-600 hover:text-gray-800 transition-colors font-medium"
+            >
+              Информация о магазине →
+            </Link>
+          </div>
         </div>
 
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />

@@ -63,6 +63,22 @@ export function HomePage() {
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
+          <div className="flex items-center space-x-4">
+            <Link 
+              to="/new"
+              className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors group"
+            >
+              <span className="font-medium">ВСЕ НОВИНКИ</span>
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link 
+              to="/info"
+              className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors group"
+            >
+              <span className="font-medium">ИНФОРМАЦИЯ</span>
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
 
           {newProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
