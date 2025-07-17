@@ -23,10 +23,28 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
   const images = product.images || [product.image_url];
   const altTexts = product.image_alt_texts || [product.name];
 
-  // Получаем рекомендации - товары из той же категории, исключая текущий товар
-  const recommendations = allProducts
-    .filter(p => p.category === product.category && p.id !== product.id && p.in_stock)
-    .slice(0, 4); // Показываем максимум 4 рекомендации
+  // Получаем рекомендации - сначала из той же категории, потом из других категорий
+  const recommendations = React.useMemo(() => {
+    // Сначала пытаемся найти товары из той же категории
+    let sameCategoryProducts = allProducts.filter(p => 
+      p.category === product.category && 
+      p.id !== product.id && 
+      p.in_stock
+    );
+    
+    // Если товаров из той же категории мало, добавляем из других категорий
+    if (sameCategoryProducts.length < 4) {
+      const otherCategoryProducts = allProducts.filter(p => 
+        p.category !== product.category && 
+        p.id !== product.id && 
+        p.in_stock
+      );
+      sameCategoryProducts = [...sameCategoryProducts, ...otherCategoryProducts];
+    }
+    
+    return sameCategoryProducts.slice(0, 4);
+  }, [allProducts, product.category, product.id]);
+
   const handleAddToCart = () => {
     if (!selectedSize) return;
     
@@ -353,29 +371,39 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
             </div>
           </div>
 
-          {/* Рекомендации */}
-          {recommendations.length > 0 && (
-            <div className="border-t border-gray-200 pt-8 mt-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">
-                Рекомендуемые товары
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {recommendations.map((recommendedProduct) => (
-                  <div key={recommendedProduct.id} className="cursor-pointer">
-                    <ProductCard
-                      product={recommendedProduct}
-                      onProductClick={(clickedProduct) => {
-                        onProductClick(clickedProduct);
-                        // Сбрасываем состояние модального окна для нового товара
-                        setSelectedSize('');
-                        setQuantity(1);
-                        setCurrentImageIndex(0);
-                        setShowMeasurements(false);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+        </div>
+
+        {/* Рекомендации - всегда показываем, даже если мало товаров */}
+        <div className="border-t border-gray-200 pt-8 mt-8 px-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-6">
+            {recommendations.some(p => p.category === product.category) 
+              ? 'Похожие товары' 
+              : 'Рекомендуемые товары'
+            }
+          </h3>
+          
+          {recommendations.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {recommendations.map((recommendedProduct) => (
+                <div key={recommendedProduct.id} className="cursor-pointer">
+                  <ProductCard
+                    product={recommendedProduct}
+                    onProductClick={(clickedProduct) => {
+                      onProductClick(clickedProduct);
+                      // Сбрасываем состояние модального окна для нового товара
+                      setSelectedSize('');
+                      setQuantity(1);
+                      setCurrentImageIndex(0);
+                      setShowMeasurements(false);
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>Рекомендации временно недоступны</p>
+              <p className="text-sm mt-2">Попробуйте просмотреть другие разделы каталога</p>
             </div>
           )}
         </div>
