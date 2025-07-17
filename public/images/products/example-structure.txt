@@ -1,0 +1,57 @@
+Пример структуры файлов для изображений товаров:
+
+📁 public/images/products/
+├── 📁 shirts/
+│   ├── white-classic-shirt-main.jpg
+│   ├── white-classic-shirt-front.jpg
+│   ├── white-classic-shirt-back.jpg
+│   ├── white-classic-shirt-detail.jpg
+│   ├── shirt-white-button-shirt-main.jpg
+│   ├── shirt-white-button-shirt-front.jpg
+│   └── shirt-white-button-shirt-detail.jpg
+├── 📁 jeans/
+│   ├── classic-jeans-main.jpg
+│   ├── classic-jeans-front.jpg
+│   ├── classic-jeans-back.jpg
+│   ├── classic-jeans-detail.jpg
+│   ├── jeans-classic-black-jeans-main.jpg
+│   └── jeans-black-skinny-jeans-main.jpg
+├── 📁 dresses/
+│   ├── black-elegant-dress-main.jpg
+│   ├── black-elegant-dress-front.jpg
+│   ├── black-elegant-dress-back.jpg
+│   ├── black-elegant-dress-styled.jpg
+│   └── dress-little-black-dress-main.jpg
+├── 📁 sweaters/
+│   ├── knit-sweater-main.jpg
+│   ├── knit-sweater-front.jpg
+│   ├── knit-sweater-texture.jpg
+│   ├── sweater-casual-gray-sweater-main.jpg
+│   └── sweater-minimalist-hoodie-main.jpg
+├── 📁 jackets/
+│   ├── jacket-wool-blend-coat-main.jpg
+│   ├── jacket-denim-jacket-main.jpg
+│   └── jacket-tailored-blazer-main.jpg
+├── 📁 skirts/
+│   ├── tweed-mini-skirt-main.jpg
+│   ├── tweed-mini-skirt-front.jpg
+│   ├── tweed-mini-skirt-styled.jpg
+│   └── skirt-midi-skirt-main.jpg
+├── 📁 bags/
+│   ├── leather-tote-bag-main.jpg
+│   ├── leather-tote-bag-detail.jpg
+│   └── leather-tote-bag-interior.jpg
+├── 📁 shoes/
+│   ├── shoes-leather-ankle-boots-main.jpg
+│   ├── shoes-leather-ankle-boots-side.jpg
+│   └── shoes-leather-ankle-boots-sole.jpg
+├── 📁 accessories/
+│   └── accessory-cashmere-scarf-main.jpg
+└── placeholder.jpg
+
+Рекомендации по именованию:
+- Используйте дефисы вместо пробелов
+- Начинайте с категории для лучшей организации
+- Добавляйте суффиксы: -main, -front, -back, -detail, -styled, -texture
+- Используйте понятные названия на английском языке
+- Формат файлов: .jpg, .jpeg, .png, .webp

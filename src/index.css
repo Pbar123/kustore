@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dual Range Slider Styles */
+.dual-range-slider {
+  position: relative;
+}
+
+.dual-range-slider input[type="range"] {
+  position: absolute;
+  width: 100%;
+  height: 8px;
+  background: transparent;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  pointer-events: none;
+}
+
+.dual-range-slider input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #3b82f6;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  pointer-events: all;
+  position: relative;
+}
+
+.dual-range-slider input[type="range"]::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #3b82f6;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  pointer-events: all;
+  border: none;
+}
+
+.dual-range-slider input[type="range"]::-webkit-slider-track {
+  background: transparent;
+  height: 8px;
+}
+
+.dual-range-slider input[type="range"]::-moz-range-track {
+  background: transparent;
+  height: 8px;
+  border: none;
+}
+
+.dual-range-slider .range-min {
+  z-index: 1;
+}
+
+.dual-range-slider .range-max {
+  z-index: 2;
+}
+
+/* Ensure the min slider is on top when values are close */
+.dual-range-slider .range-min:focus {
+  z-index: 3;
+}
