@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { CategoryFilter } from '../components/CategoryFilter';
 import { FilterModal, FilterState, defaultFilters } from '../components/FilterModal';
 import { SortDropdown, SortOption } from '../components/SortDropdown';
