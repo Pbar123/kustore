@@ -101,13 +101,6 @@ export function useProducts() {
         if (!hasMatchingSize) return false;
       }
 
-      // Color filter (mock implementation - in real app you'd have color data)
-      if (filters.colors.length > 0) {
-        if (!filters.colors.includes(product.color || '')) {
-          return false;
-        }
-      }
-
       // Brand filter (mock implementation)
       if (filters.brands.length > 0) {
         if (!filters.brands.includes(product.brand || '')) {
