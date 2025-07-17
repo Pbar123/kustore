@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { X, Plus, Minus, ChevronLeft, ChevronRight, Ruler, Info } from 'lucide-react';
+import { X, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { ProductCard } from './ProductCard';
-import { SizeChartModal } from './SizeChartModal';
 
 interface ProductModalProps {
   product: Product | null;
@@ -17,7 +16,6 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showSizeChart, setShowSizeChart] = useState(false);
 
   // Получаем рекомендации - сначала из той же категории, потом из других категорий
   const recommendations = React.useMemo(() => {
@@ -250,17 +248,6 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
                     </div>
                   ))}
                 </div>
-                
-                {/* Size Chart Button */}
-                <div className="mt-4">
-                  <button
-                    onClick={() => setShowSizeChart(true)}
-                    className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                  >
-                    <Info className="h-4 w-4" />
-                    <span>Размерная сетка</span>
-                  </button>
-                </div>
               </div>
 
               {/* Quantity Selection */}
@@ -360,7 +347,6 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
                       setSelectedSize('');
                       setQuantity(1);
                       setCurrentImageIndex(0);
-                      setShowMeasurements(false);
                     }}
                   />
                 </div>
@@ -374,12 +360,6 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
           )}
         </div>
       </div>
-      
-      <SizeChartModal
-        isOpen={showSizeChart}
-        onClose={() => setShowSizeChart(false)}
-        category={product.category}
-      />
     </div>
   );
 }
