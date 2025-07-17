@@ -42,7 +42,7 @@ export function HomePage() {
         <div className="bg-black text-white text-center py-3 mb-8 rounded-lg">
           <div className="flex items-center justify-center space-x-2">
             <Truck className="h-5 w-5" />
-            <span className="text-sm font-medium">БЕСПЛАТНАЯ ДОСТАВКА ПРИ ЗАКАЗЕ ОТ 1200 Р. 🔥</span>
+            <span className="text-sm font-medium">Бесплатная доставка при заказе от 1200 рублей</span>
           </div>
         </div>
 
