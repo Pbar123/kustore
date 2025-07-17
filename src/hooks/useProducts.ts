@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Product } from '../types';
 import { FilterState } from '../components/FilterModal';
+import { SortOption } from '../components/SortDropdown';
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -114,12 +115,42 @@ export function useProducts() {
     });
   };
   return {
+  const sortProducts = (products: Product[], sortBy: SortOption): Product[] => {
+    const sorted = [...products];
+    
+    switch (sortBy) {
+      case 'newest':
+        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      case 'price-low':
+        return sorted.sort((a, b) => a.real_price - b.real_price);
+      
+      case 'price-high':
+        return sorted.sort((a, b) => b.real_price - a.real_price);
+      
+      case 'popular':
+        // For now, sort by newest as we don't have popularity data
+        // In the future, this could be based on order count, views, etc.
+        return sorted.sort((a, b) => {
+          // Prioritize new items for popularity
+          if (a.is_new && !b.is_new) return -1;
+          if (!a.is_new && b.is_new) return 1;
+          // Then by creation date
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+      
+      default:
+        return sorted;
+    }
+  };
+
     products,
     loading,
     error,
     getNewProducts,
     getProductsByCategory,
     applyFilters,
+    sortProducts,
     refetch: fetchProducts
   };
 }

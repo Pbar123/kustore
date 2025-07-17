@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { CategoryFilter } from '../components/CategoryFilter';
 import { FilterModal, FilterState, defaultFilters } from '../components/FilterModal';
+import { SortDropdown, SortOption } from '../components/SortDropdown';
 import { ProductGrid } from '../components/ProductGrid';
 import { ProductModal } from '../components/ProductModal';
 import { CartSidebar } from '../components/CartSidebar';
@@ -9,12 +10,13 @@ import { useProducts } from '../hooks/useProducts';
 import { Product } from '../types';
 
 export function AllProductsPage() {
-  const { products, loading, error, applyFilters } = useProducts();
+  const { products, loading, error, applyFilters, sortProducts } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [filters, setFilters] = useState<FilterState>(() => {
     const minPrice = products.length > 0 ? Math.min(...products.map(p => p.price)) : 0;
     const maxPrice = products.length > 0 ? Math.max(...products.map(p => p.price)) : 1000;
@@ -59,9 +61,12 @@ export function AllProductsPage() {
     // Then apply advanced filters
     filtered = applyFilters(filtered, filters);
     
+    // Finally apply sorting
+    filtered = sortProducts(filtered, sortBy);
+    
     console.log('Filtered products:', filtered.length);
     return filtered;
-  }, [products, selectedCategory, searchTerm, filters, applyFilters]);
+  }, [products, selectedCategory, searchTerm, filters, sortBy, applyFilters, sortProducts]);
 
   const getActiveFiltersCount = () => {
     let count = 0;
@@ -131,14 +136,24 @@ export function AllProductsPage() {
 
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         
-        <CategoryFilter
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          loading={loading}
-          onFilterClick={() => setIsFilterOpen(true)}
-          activeFiltersCount={getActiveFiltersCount()}
-        />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            loading={loading}
+            onFilterClick={() => setIsFilterOpen(true)}
+            activeFiltersCount={getActiveFiltersCount()}
+          />
+          
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600">Сортировка:</span>
+            <SortDropdown
+              currentSort={sortBy}
+              onSortChange={setSortBy}
+            />
+          </div>
+        </div>
         
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
