@@ -15,9 +15,6 @@ export interface FilterState {
   sizes: string[];
   brands: string[];
   categories: string[];
-  isNew: boolean | null;
-  isOnSale: boolean | null;
-  inStock: boolean | null;
 }
 
 export const defaultFilters: FilterState = {
@@ -25,9 +22,6 @@ export const defaultFilters: FilterState = {
   sizes: [],
   brands: [],
   categories: [],
-  isNew: null,
-  isOnSale: null,
-  inStock: null,
 };
 
 export function FilterModal({ isOpen, onClose, products, onFiltersChange, currentFilters }: FilterModalProps) {
@@ -37,7 +31,6 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
     category: false,
     size: false,
     brand: false,
-    status: false,
   });
 
   // Extract unique values from products database
@@ -145,15 +138,20 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
     if (filters.categories.length > 0) count++;
     if (filters.sizes.length > 0) count++;
     if (filters.brands.length > 0) count++;
-    if (filters.isNew !== null) count++;
-    if (filters.isOnSale !== null) count++;
     return count;
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-2">
@@ -400,58 +398,6 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
             )}
           </div>
 
-          {/* Status */}
-          <div>
-            <button
-              onClick={() => toggleSection('status')}
-              className="flex items-center justify-between w-full text-left py-2"
-            >
-              <h3 className="text-base font-medium text-gray-900">Статус</h3>
-              {expandedSections.status ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
-            </button>
-            {expandedSections.status && (
-              <div className="mt-3 space-y-3">
-                <div>
-                  <h4 className="text-xs font-medium text-gray-600 mb-2">Новинки</h4>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleBooleanFilter('isNew', true)}
-                      className={`px-3 py-1 border rounded text-xs transition-colors ${
-                        filters.isNew === true
-                          ? 'bg-black text-white border-black'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-black'
-                      }`}
-                    >
-                      Только новинки
-                    </button>
-                    <button
-                      onClick={() => handleBooleanFilter('isNew', false)}
-                      className={`px-3 py-1 border rounded text-xs transition-colors ${
-                        filters.isNew === false
-                          ? 'bg-black text-white border-black'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-black'
-                      }`}
-                    >
-                      Исключить новинки
-                    </button>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-xs font-medium text-gray-600 mb-2">Наличие</h4>
-                  <label className="flex items-center space-x-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={filters.inStock === true}
-                      onChange={(e) => setFilters(prev => ({ ...prev, inStock: e.target.checked ? true : null }))}
-                      className="rounded border-gray-300 text-black focus:ring-black h-3 w-3"
-                    />
-                    <span className="text-gray-700 text-sm">Только в наличии</span>
-                  </label>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Footer */}

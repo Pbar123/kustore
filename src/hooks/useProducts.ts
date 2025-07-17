@@ -110,20 +110,6 @@ export function useProducts() {
         }
       }
 
-      // New products filter
-      if (filters.isNew !== null) {
-        if (product.is_new !== filters.isNew) {
-          return false;
-        }
-      }
-
-      // In stock filter
-      if (filters.inStock === true) {
-        if (!product.in_stock) {
-          return false;
-        }
-      }
-
       return true;
     });
   };
