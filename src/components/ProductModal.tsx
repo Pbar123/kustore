@@ -194,12 +194,12 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
                 <div className="flex items-center space-x-3">
                   {product.is_on_sale && product.sale_price ? (
                     <>
-                      <span className="text-2xl font-semibold text-red-600">Руб. {product.sale_price}</span>
-                      <span className="text-xl text-gray-400 line-through">Руб. {product.price}</span>
+                      <span className="text-2xl font-semibold text-red-600">{product.sale_price} руб.</span>
+                      <span className="text-xl text-gray-400 line-through">{product.price} руб.</span>
                       <span className="bg-red-600 text-white text-sm px-2 py-1 rounded">SALE</span>
                     </>
                   ) : (
-                    <span className="text-2xl font-semibold text-gray-900">Руб. {product.price}</span>
+                    <span className="text-2xl font-semibold text-gray-900">{product.price} руб.</span>
                   )}
                   {product.is_new && (
                     <span className="bg-black text-white text-sm px-2 py-1 rounded">NEW</span>
@@ -279,12 +279,6 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
                             </div>
                           ))}
                         </div>
-                        
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <p className="text-xs text-gray-500">
-                            * Замеры могут незначительно отличаться в зависимости от модели
-                          </p>
-                        </div>
                       </div>
                     ) : (
                       <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -361,15 +355,16 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
               </button>
 
               {/* Product Features */}
-              <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Product Features</h3>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Premium quality materials</li>
-                  <li>• Comfortable fit</li>
-                  <li>• Easy care instructions</li>
-                  <li>• Sustainable production</li>
-                </ul>
-              </div>
+              {product.features && product.features.length > 0 && (
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Особенности товара</h3>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    {product.features.map((feature, index) => (
+                      <li key={index}>• {feature}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 

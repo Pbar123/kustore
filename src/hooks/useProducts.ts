@@ -57,7 +57,8 @@ export function useProducts() {
         created_at: item.created_at,
         updated_at: item.updated_at,
         measurements: item.measurements || {},
-        stock_quantity: item.stock_quantity || {}
+        stock_quantity: item.stock_quantity || {},
+        features: item.features || []
       }));
 
       setProducts(transformedProducts);

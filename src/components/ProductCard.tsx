@@ -90,11 +90,11 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
         <div className="flex items-center space-x-2">
           {product.is_on_sale && product.sale_price ? (
             <>
-              <span className="text-sm text-red-600 font-medium">${product.sale_price}</span>
-              <span className="text-sm text-gray-400 line-through">${product.price}</span>
+              <span className="text-sm text-red-600 font-medium">{product.sale_price} руб.</span>
+              <span className="text-sm text-gray-400 line-through">{product.price} руб.</span>
             </>
           ) : (
-            <span className="text-sm text-gray-600">Руб. {product.price}</span>
+            <span className="text-sm text-gray-600">{product.price} руб.</span>
           )}
         </div>
       </div>

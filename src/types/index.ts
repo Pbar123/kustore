@@ -19,6 +19,7 @@ export interface Product {
   updated_at: string;
   measurements?: Record<string, Record<string, string>>;
   stock_quantity?: Record<string, number>;
+  features?: string[];
 }
 
 export interface CartItem {

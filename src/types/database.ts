@@ -23,6 +23,7 @@ export interface Database {
           updated_at: string;
           measurements: Record<string, Record<string, string>>;
           stock_quantity: Record<string, number>;
+          features: string[];
         };
         Insert: {
           id?: string;
@@ -45,6 +46,7 @@ export interface Database {
           updated_at?: string;
           measurements?: Record<string, Record<string, string>>;
           stock_quantity?: Record<string, number>;
+          features?: string[];
         };
         Update: {
           id?: string;
@@ -67,6 +69,7 @@ export interface Database {
           updated_at?: string;
           measurements?: Record<string, Record<string, string>>;
           stock_quantity?: Record<string, number>;
+          features?: string[];
         };
       };
     };

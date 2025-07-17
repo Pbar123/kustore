@@ -74,7 +74,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                       <h3 className="font-medium text-gray-900">{item.product.name}</h3>
                       <p className="text-sm text-gray-600">Size: {item.size}</p>
                       <p className="text-sm font-medium text-gray-900">
-                        ${item.product.is_on_sale && item.product.sale_price ? item.product.sale_price : item.product.price}
+                        {item.product.is_on_sale && item.product.sale_price ? item.product.sale_price : item.product.price} руб.
                       </p>
                       
                       <div className="flex items-center space-x-2 mt-2">
@@ -110,7 +110,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
             <div className="border-t border-gray-200 p-6">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-medium text-gray-900">Total:</span>
-                <span className="text-xl font-bold text-gray-900">${state.total.toFixed(2)}</span>
+                <span className="text-xl font-bold text-gray-900">{state.total.toFixed(2)} руб.</span>
               </div>
               <button 
                 onClick={() => setIsCheckoutOpen(true)}

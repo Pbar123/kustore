@@ -30,6 +30,7 @@ const ADD_PRODUCT_STATES = {
   WAITING_STOCK: 'waiting_stock',
   WAITING_MEASUREMENTS: 'waiting_measurements',
   WAITING_IMAGES: 'waiting_images',
+  WAITING_FEATURES: 'waiting_features',
   WAITING_IS_NEW: 'waiting_is_new',
   WAITING_IS_ON_SALE: 'waiting_is_on_sale',
   CONFIRM: 'confirm'
@@ -339,6 +340,19 @@ async function handleAddProductState(chatId, text, userState) {
       product.image_url = imagePaths[0]; // Первое изображение как основное
       product.image_alt_texts = imagePaths.map(() => product.name);
       
+      userState.state = ADD_PRODUCT_STATES.WAITING_FEATURES;
+      bot.sendMessage(chatId, 
+        '✨ Введите особенности товара через запятую (или "нет" если не нужны)\n' +
+        'Пример: Высокое качество материалов, Удобная посадка, Легкий уход'
+      );
+      break;
+      
+    case ADD_PRODUCT_STATES.WAITING_FEATURES:
+      if (text.toLowerCase() !== 'нет') {
+        product.features = text.split(',').map(feature => feature.trim());
+      } else {
+        product.features = [];
+      }
       userState.state = ADD_PRODUCT_STATES.WAITING_IS_NEW;
       bot.sendMessage(chatId, '🆕 Это новинка?', getYesNoMenu());
       break;
@@ -388,6 +402,7 @@ ${product.color ? `🎨 *Цвет:* ${product.color}\n` : ''}
 📏 *Размеры:* ${product.sizes.join(', ')}
 📦 *Остатки:* ${Object.entries(product.stock_quantity).map(([size, qty]) => `${size}: ${qty}`).join(', ')}
 🖼️ *Изображения:* ${product.images.length} шт.
+${product.features && product.features.length > 0 ? `✨ *Особенности:* ${product.features.join(', ')}\n` : ''}
 🆕 *Новинка:* ${product.is_new ? 'Да' : 'Нет'}
 🏷️ *Распродажа:* ${product.is_on_sale ? 'Да' : 'Нет'}
   `;
@@ -525,6 +540,7 @@ async function showEditMenu(chatId, product) {
         ['🏷️ Цена со скидкой', '📂 Категория'],
         ['🎨 Цвет', '📝 Описание'],
         ['📏 Размеры', '📦 Остатки'],
+        ['✨ Особенности', '🖼️ Изображения'],
         ['🆕 Новинка', '🏷️ Распродажа'],
         ['👁️ Скрыть/Показать', '❌ Отмена']
       ],
@@ -545,6 +561,8 @@ async function selectFieldToEdit(chatId, fieldName, userState) {
     '📝 Описание': 'description',
     '📏 Размеры': 'sizes',
     '📦 Остатки': 'stock_quantity',
+    '✨ Особенности': 'features',
+    '🖼️ Изображения': 'images',
     '🆕 Новинка': 'is_new',
     '🏷️ Распродажа': 'is_on_sale',
     '👁️ Скрыть/Показать': 'in_stock'
@@ -581,6 +599,12 @@ async function selectFieldToEdit(chatId, fieldName, userState) {
       break;
     case 'description':
       prompt = `📝 Текущее описание: ${currentValue}\nВведите новое описание:`;
+      break;
+    case 'features':
+      prompt = `✨ Текущие особенности: ${currentValue && currentValue.length > 0 ? currentValue.join(', ') : 'не указаны'}\nВведите новые особенности через запятую:`;
+      break;
+    case 'images':
+      prompt = `🖼️ Текущие изображения: ${currentValue && currentValue.length > 0 ? currentValue.length + ' шт.' : 'не указаны'}\nВведите новые пути к изображениям через запятую:`;
       break;
     case 'is_new':
     case 'is_on_sale':
@@ -628,6 +652,35 @@ async function updateProductField(chatId, newValue, userState) {
           }
         }
         break;
+        
+      case 'features':
+        if (newValue.toLowerCase() === 'удалить' || newValue.toLowerCase() === 'нет') {
+          processedValue = [];
+        } else {
+          processedValue = newValue.split(',').map(feature => feature.trim());
+        }
+        break;
+        
+      case 'images':
+        processedValue = newValue.split(',').map(path => path.trim());
+        // Обновляем также основное изображение
+        await supabase
+          .from('products')
+          .update({ 
+            images: processedValue,
+            image_url: processedValue[0],
+            image_alt_texts: processedValue.map(() => product.name)
+          })
+          .eq('id', product.id);
+        
+        userStates.delete(chatId);
+        bot.sendMessage(chatId, 
+          `✅ *Изображения товара обновлены!*\n\n` +
+          `📝 Товар: ${product.name}\n` +
+          `🖼️ Количество изображений: ${processedValue.length}`, 
+          { ...getMainMenu(), parse_mode: 'Markdown' }
+        );
+        return;
         
       case 'is_new':
       case 'is_on_sale':

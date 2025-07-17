@@ -13,7 +13,6 @@ interface FilterModalProps {
 export interface FilterState {
   priceRange: [number, number];
   sizes: string[];
-  colors: string[];
   brands: string[];
   categories: string[];
   isNew: boolean | null;
@@ -24,7 +23,6 @@ export interface FilterState {
 export const defaultFilters: FilterState = {
   priceRange: [0, 1000],
   sizes: [],
-  colors: [],
   brands: [],
   categories: [],
   isNew: null,
@@ -45,7 +43,6 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
 
   // Extract unique values from products database
   const availableCategories = Array.from(new Set(products.map(p => p.category))).sort();
-  const availableColors = Array.from(new Set(products.map(p => p.color).filter(Boolean))).sort();
   const availableBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort();
   
   // Get sizes based on selected categories or all sizes if no category selected
@@ -60,16 +57,21 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
     
     // Group sizes by type for better organization
     const clothingSizes = allSizes.filter(size => ['XS', 'S', 'M', 'L', 'XL', 'XXL'].includes(size));
+    const sortedClothingSizes = clothingSizes.sort((a, b) => {
+      const order = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+      return order.indexOf(a) - order.indexOf(b);
+    });
+    
     const pantsSizes = allSizes.filter(size => /^\d+$/.test(size) && parseInt(size) >= 26 && parseInt(size) <= 50);
     const shoeSizes = allSizes.filter(size => /^\d+$/.test(size) && parseInt(size) >= 35 && parseInt(size) <= 50);
     const otherSizes = allSizes.filter(size => 
-      !clothingSizes.includes(size) && 
+      !sortedClothingSizes.includes(size) && 
       !pantsSizes.includes(size) && 
       !shoeSizes.includes(size)
     );
     
     return {
-      clothing: clothingSizes.sort(),
+      clothing: sortedClothingSizes,
       pants: pantsSizes.sort((a, b) => parseInt(a) - parseInt(b)),
       shoes: shoeSizes.sort((a, b) => parseInt(a) - parseInt(b)),
       other: otherSizes.sort()
@@ -104,7 +106,7 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
     setFilters(prev => ({ ...prev, priceRange: newRange }));
   };
 
-  const toggleArrayFilter = (key: 'sizes' | 'colors' | 'brands', value: string) => {
+  const toggleArrayFilter = (key: 'sizes' | 'brands', value: string) => {
     setFilters(prev => ({
       ...prev,
       [key]: prev[key].includes(value)
@@ -149,7 +151,6 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
     if (filters.priceRange[0] > minPrice || filters.priceRange[1] < maxPrice) count++;
     if (filters.categories.length > 0) count++;
     if (filters.sizes.length > 0) count++;
-    if (filters.colors.length > 0) count++;
     if (filters.brands.length > 0) count++;
     if (filters.isNew !== null) count++;
     if (filters.isOnSale !== null) count++;
@@ -389,34 +390,6 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
                     </div>
                   </div>
                 )}
-              </div>
-            )}
-          </div>
-
-          {/* Colors */}
-          <div>
-            <button
-              onClick={() => toggleSection('color')}
-              className="flex items-center justify-between w-full text-left"
-            >
-              <h3 className="text-lg font-medium text-gray-900">Цвет</h3>
-              {expandedSections.color ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-            {expandedSections.color && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {availableColors.map(color => (
-                  <button
-                    key={color}
-                    onClick={() => toggleArrayFilter('colors', color)}
-                    className={`px-3 py-2 border rounded-lg text-sm transition-colors ${
-                      filters.colors.includes(color)
-                        ? 'bg-black text-white border-black'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-black'
-                    }`}
-                  >
-                    {color}
-                  </button>
-                ))}
               </div>
             )}
           </div>
