@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Store, Sparkles, ShoppingBag, User } from 'lucide-react';
+import { Home, Store, Sparkles, ShoppingBag, Info } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { CartSidebar } from './CartSidebar';
@@ -34,7 +34,7 @@ export function Header() {
     },
     {
       path: '/info',
-      icon: User,
+      icon: Info,
       label: 'Инфо',
       isActive: isActive('/info')
     }
