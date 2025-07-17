@@ -6,9 +6,10 @@ import { Header } from './components/Header';
 import { TelegramWebAppInit } from './components/TelegramWebAppInit';
 import { HomePage } from './pages/HomePage';
 import { NewPage } from './pages/NewPage';
-import { PromoCodesPage } from './pages/PromoCodesPage';
 import { InfoPage } from './pages/InfoPage';
 import { AllProductsPage } from './pages/AllProductsPage';
+import { FavoritesPage } from './pages/FavoritesPage';
+import { OrdersPage } from './pages/OrdersPage';
 import { AdminPage } from './pages/AdminPage';
 
 function App() {
@@ -25,6 +26,8 @@ function App() {
               <Route path="/info" element={<InfoPage />} />
               <Route path="/new" element={<NewPage />} />
               <Route path="/all" element={<AllProductsPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/orders" element={<OrdersPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Routes>
           </div>

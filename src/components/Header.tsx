@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Store, Sparkles, ShoppingBag, Info } from 'lucide-react';
+import { Home, Store, Sparkles, ShoppingBag, Info, Heart, Package } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { CartSidebar } from './CartSidebar';
@@ -33,11 +33,23 @@ export function Header() {
       isActive: isActive('/new')
     },
     {
+      path: '/favorites',
+      icon: Heart,
+      label: 'Избранное',
+      isActive: isActive('/favorites')
+    },
+    {
+      path: '/orders',
+      icon: Package,
+      label: 'Заказы',
+      isActive: isActive('/orders')
+    },
+    {
       path: '/info',
       icon: Info,
       label: 'Инфо',
       isActive: isActive('/info')
-    }
+    },
   ];
 
   return (

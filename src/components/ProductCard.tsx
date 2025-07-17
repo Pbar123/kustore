@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
+import { FavoriteButton } from './FavoriteButton';
 
 interface ProductCardProps {
   product: Product;
@@ -72,6 +73,11 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
             )}
           </div>
         )}
+        
+        {/* Favorite Button */}
+        <div className="absolute top-2 right-2">
+          <FavoriteButton productId={product.id} size="sm" />
+        </div>
       </div>
       <div className="space-y-2">
         {product.is_new && (

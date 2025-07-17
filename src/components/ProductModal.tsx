@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
+import { FavoriteButton } from './FavoriteButton';
 import { ProductCard } from './ProductCard';
 
 interface ProductModalProps {
@@ -190,12 +191,15 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
             <div className="space-y-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
                   <span className="text-2xl font-semibold text-gray-900">{product.real_price} руб.</span>
                   <span className="text-xl text-gray-400 line-through">{product.fake_original_price} руб.</span>
                   {product.is_new && (
                     <span className="bg-black text-white text-sm px-2 py-1 rounded">NEW</span>
                   )}
+                  </div>
+                  <FavoriteButton productId={product.id} size="lg" />
                 </div>
               </div>
 
