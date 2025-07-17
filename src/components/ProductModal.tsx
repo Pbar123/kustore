@@ -40,7 +40,7 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
     }
     
     return sameCategoryProducts.slice(0, 4);
-  }, [allProducts, product.category, product.id]);
+  }, [allProducts, product]);
 
   if (!product) return null;
 
