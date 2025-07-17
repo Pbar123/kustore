@@ -804,9 +804,9 @@ async function showProductsList(chatId) {
     
     let message = '📋 *Список товаров (последние 20):*\n\n';
     data.forEach((product, index) => {
-      const status = product.in_stock ? '✅' : '❌';
+      message += `${index + 1}. ${product.name} (${product.real_price} руб.)\n`;
       message += `${index + 1}. ${status} ${product.name}\n`;
-      message += `   💰 ${product.price} руб. | 📂 ${product.category}\n`;
+      message += `   💰 ${product.real_price} руб. | 📂 ${product.category}\n`;
       message += `   🆔 \`${product.id}\`\n\n`;
     });
     

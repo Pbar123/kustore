@@ -32,8 +32,8 @@ export function AllProductsPage() {
   // Update price range when products load
   React.useEffect(() => {
     if (products.length > 0) {
-      const minPrice = Math.min(...products.map(p => p.price));
-      const maxPrice = Math.max(...products.map(p => p.price));
+      const minPrice = Math.min(...products.map(p => p.real_price));
+      const maxPrice = Math.max(...products.map(p => p.real_price));
       setFilters(prev => ({
         ...prev,
         priceRange: [minPrice, maxPrice]
@@ -65,15 +65,14 @@ export function AllProductsPage() {
 
   const getActiveFiltersCount = () => {
     let count = 0;
-    const minPrice = products.length > 0 ? Math.min(...products.map(p => p.price)) : 0;
-    const maxPrice = products.length > 0 ? Math.max(...products.map(p => p.price)) : 1000;
+    const minPrice = products.length > 0 ? Math.min(...products.map(p => p.real_price)) : 0;
+    const maxPrice = products.length > 0 ? Math.max(...products.map(p => p.real_price)) : 1000;
     
     if (filters.priceRange[0] > minPrice || filters.priceRange[1] < maxPrice) count++;
     if (filters.categories.length > 0) count++;
     if (filters.sizes.length > 0) count++;
     if (filters.brands.length > 0) count++;
     if (filters.isNew !== null) count++;
-    if (filters.isOnSale !== null) count++;
     if (!filters.inStock) count++;
     return count;
   };

@@ -66,8 +66,8 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         product_image: item.product.image_url,
         size: item.size,
         quantity: item.quantity,
-        price: item.product.is_on_sale && item.product.sale_price ? item.product.sale_price : item.product.price,
-        total: (item.product.is_on_sale && item.product.sale_price ? item.product.sale_price : item.product.price) * item.quantity
+        real_price: item.product.real_price,
+        total: item.product.real_price * item.quantity
       }));
 
       // Создаем заказ в базе данных
@@ -225,7 +225,7 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-gray-900">
-                      {((item.product.is_on_sale && item.product.sale_price ? item.product.sale_price : item.product.price) * item.quantity).toFixed(2)} руб.
+                      {(item.product.real_price * item.quantity).toFixed(2)} руб.
                     </p>
                   </div>
                 </div>

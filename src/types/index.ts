@@ -1,8 +1,8 @@
 export interface Product {
   id: string;
   name: string;
-  price: number;
-  sale_price?: number | null;
+  real_price: number;
+  fake_original_price: number;
   image_url: string;
   images?: string[];
   image_alt_texts?: string[];
@@ -14,7 +14,6 @@ export interface Product {
   sizes: string[];
   in_stock: boolean;
   is_new: boolean;
-  is_on_sale: boolean;
   created_at: string;
   updated_at: string;
   measurements?: Record<string, Record<string, string>>;
@@ -34,7 +33,7 @@ export interface OrderItem {
   product_image: string;
   size: string;
   quantity: number;
-  price: number;
+  real_price: number;
   total: number;
 }
 

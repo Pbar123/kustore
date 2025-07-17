@@ -74,7 +74,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                       <h3 className="font-medium text-gray-900">{item.product.name}</h3>
                       <p className="text-sm text-gray-600">Size: {item.size}</p>
                       <p className="text-sm font-medium text-gray-900">
-                        {item.product.is_on_sale && item.product.sale_price ? item.product.sale_price : item.product.price} руб.
+                        {item.product.real_price} руб.
                       </p>
                       
                       <div className="flex items-center space-x-2 mt-2">

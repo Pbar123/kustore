@@ -16,7 +16,6 @@ export interface FilterState {
   brands: string[];
   categories: string[];
   isNew: boolean | null;
-  isOnSale: boolean | null;
   inStock: boolean;
 }
 
@@ -26,7 +25,6 @@ export const defaultFilters: FilterState = {
   brands: [],
   categories: [],
   isNew: null,
-  isOnSale: null,
   inStock: true,
 };
 
@@ -80,8 +78,8 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
   
   const availableSizes = getAvailableSizes();
   
-  const minPrice = Math.min(...products.map(p => p.price));
-  const maxPrice = Math.max(...products.map(p => p.price));
+  const minPrice = Math.min(...products.map(p => p.real_price));
+  const maxPrice = Math.max(...products.map(p => p.real_price));
 
   useEffect(() => {
     setFilters(currentFilters);
@@ -148,12 +146,13 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
 
   const getActiveFiltersCount = () => {
     let count = 0;
-    if (filters.priceRange[0] > minPrice || filters.priceRange[1] < maxPrice) count++;
+    const minProductPrice = Math.min(...products.map(p => p.real_price));
+    const maxProductPrice = Math.max(...products.map(p => p.real_price));
+    if (filters.priceRange[0] > minProductPrice || filters.priceRange[1] < maxProductPrice) count++;
     if (filters.categories.length > 0) count++;
     if (filters.sizes.length > 0) count++;
     if (filters.brands.length > 0) count++;
     if (filters.isNew !== null) count++;
-    if (filters.isOnSale !== null) count++;
     if (!filters.inStock) count++;
     return count;
   };
@@ -441,16 +440,6 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
                     }`}
                   >
                     Новинки
-                  </button>
-                  <button
-                    onClick={() => handleBooleanFilter('isOnSale', true)}
-                    className={`px-3 py-2 border rounded-lg text-sm transition-colors ${
-                      filters.isOnSale === true
-                        ? 'bg-red-600 text-white border-red-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-red-600'
-                    }`}
-                  >
-                    Скидки
                   </button>
                 </div>
                 <label className="flex items-center space-x-2">

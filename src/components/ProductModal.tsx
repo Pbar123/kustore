@@ -191,15 +191,8 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
                 <div className="flex items-center space-x-3">
-                  {product.is_on_sale && product.sale_price ? (
-                    <>
-                      <span className="text-2xl font-semibold text-red-600">{product.sale_price} руб.</span>
-                      <span className="text-xl text-gray-400 line-through">{product.price} руб.</span>
-                      <span className="bg-red-600 text-white text-sm px-2 py-1 rounded">SALE</span>
-                    </>
-                  ) : (
-                    <span className="text-2xl font-semibold text-gray-900">{product.price} руб.</span>
-                  )}
+                  <span className="text-2xl font-semibold text-gray-900">{product.real_price} руб.</span>
+                  <span className="text-xl text-gray-400 line-through">{product.fake_original_price} руб.</span>
                   {product.is_new && (
                     <span className="bg-black text-white text-sm px-2 py-1 rounded">NEW</span>
                   )}

@@ -66,16 +66,6 @@ export function Header() {
             >
               Весь ассортимент
             </Link>
-            <Link 
-              to="/sale" 
-              className={`px-3 py-2 text-sm font-medium transition-colors ${
-                isActive('/sale') 
-                  ? 'text-black border-b-2 border-black' 
-                  : 'text-gray-900 hover:text-gray-600'
-              }`}
-            >
-              Sale
-            </Link>
           </nav>
 
           {/* Desktop Actions */}
@@ -143,15 +133,6 @@ export function Header() {
               onClick={() => setIsMenuOpen(false)}
             >
               Весь ассортимент
-            </Link>
-            <Link 
-              to="/sale" 
-              className={`block px-3 py-2 hover:bg-gray-50 ${
-                isActive('/sale') ? 'text-black font-medium' : 'text-gray-900'
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Sale
             </Link>
           </nav>
           <div className="px-4 py-2 border-t border-gray-200 flex items-center space-x-4">

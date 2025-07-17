@@ -88,14 +88,8 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
           {product.name}
         </h3>
         <div className="flex items-center space-x-2">
-          {product.is_on_sale && product.sale_price ? (
-            <>
-              <span className="text-sm text-red-600 font-medium">{product.sale_price} руб.</span>
-              <span className="text-sm text-gray-400 line-through">{product.price} руб.</span>
-            </>
-          ) : (
-            <span className="text-sm text-gray-600">{product.price} руб.</span>
-          )}
+          <span className="text-sm text-gray-900 font-medium">{product.real_price} руб.</span>
+          <span className="text-sm text-gray-400 line-through">{product.fake_original_price} руб.</span>
         </div>
       </div>
     </div>

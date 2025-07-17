@@ -40,8 +40,8 @@ export function useProducts() {
       const transformedProducts: Product[] = data.map(item => ({
         id: item.id,
         name: item.name,
-        price: item.price,
-        sale_price: item.sale_price,
+        real_price: item.real_price,
+        fake_original_price: item.fake_original_price,
         image_url: item.image_url,
         images: item.images || [item.image_url],
         image_alt_texts: item.image_alt_texts || [item.name],
@@ -53,7 +53,6 @@ export function useProducts() {
         sizes: item.sizes,
         in_stock: item.in_stock,
         is_new: item.is_new,
-        is_on_sale: item.is_on_sale,
         created_at: item.created_at,
         updated_at: item.updated_at,
         measurements: item.measurements || {},
@@ -75,10 +74,6 @@ export function useProducts() {
     return products.filter(product => product.is_new);
   };
 
-  const getSaleProducts = () => {
-    return products.filter(product => product.is_on_sale);
-  };
-
   const getProductsByCategory = (category: string) => {
     console.log('Getting products by category:', category, 'Total products:', products.length);
     if (category === 'all') return products;
@@ -90,7 +85,7 @@ export function useProducts() {
   const applyFilters = (products: Product[], filters: FilterState): Product[] => {
     return products.filter(product => {
       // Price filter
-      const price = product.is_on_sale && product.sale_price ? product.sale_price : product.price;
+      const price = product.real_price;
       if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
         return false;
       }
@@ -120,11 +115,6 @@ export function useProducts() {
         return false;
       }
 
-      // Sale products filter
-      if (filters.isOnSale !== null && product.is_on_sale !== filters.isOnSale) {
-        return false;
-      }
-
       // In stock filter
       if (filters.inStock && !product.in_stock) {
         return false;
@@ -138,7 +128,6 @@ export function useProducts() {
     loading,
     error,
     getNewProducts,
-    getSaleProducts,
     getProductsByCategory,
     applyFilters,
     refetch: fetchProducts

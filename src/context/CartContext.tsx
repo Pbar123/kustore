@@ -51,8 +51,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             : item
         );
         const total = updatedItems.reduce((sum, item) => {
-          const price = item.product.is_on_sale && item.product.sale_price ? item.product.sale_price : item.product.price;
-          return sum + price * item.quantity;
+          return sum + item.product.real_price * item.quantity;
         }, 0);
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
         return { items: updatedItems, total, itemCount };
@@ -60,8 +59,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 
       const newItems = [...state.items, { product, size, quantity: 1 }];
       const total = newItems.reduce((sum, item) => {
-        const price = item.product.is_on_sale && item.product.sale_price ? item.product.sale_price : item.product.price;
-        return sum + price * item.quantity;
+        return sum + item.product.real_price * item.quantity;
       }, 0);
       const itemCount = newItems.reduce((sum, item) => sum + item.quantity, 0);
       return { items: newItems, total, itemCount };
@@ -72,8 +70,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         item => !(item.product.id === action.payload.productId && item.size === action.payload.size)
       );
       const total = updatedItems.reduce((sum, item) => {
-        const price = item.product.is_on_sale && item.product.sale_price ? item.product.sale_price : item.product.price;
-        return sum + price * item.quantity;
+        return sum + item.product.real_price * item.quantity;
       }, 0);
       const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
       return { items: updatedItems, total, itemCount };
@@ -95,8 +92,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           : item
       );
       const total = updatedItems.reduce((sum, item) => {
-        const price = item.product.is_on_sale && item.product.sale_price ? item.product.sale_price : item.product.price;
-        return sum + price * item.quantity;
+        return sum + item.product.real_price * item.quantity;
       }, 0);
       const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
       return { items: updatedItems, total, itemCount };
