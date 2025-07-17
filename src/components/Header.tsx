@@ -57,6 +57,16 @@ export function Header() {
               New
             </Link>
             <Link 
+              to="/promo" 
+              className={`px-3 py-2 text-sm font-medium transition-colors ${
+                isActive('/promo') 
+                  ? 'text-black border-b-2 border-black' 
+                  : 'text-gray-900 hover:text-gray-600'
+              }`}
+            >
+              Промокоды
+            </Link>
+            <Link 
               to="/all" 
               className={`px-3 py-2 text-sm font-medium transition-colors ${
                 isActive('/all') 
@@ -124,6 +134,15 @@ export function Header() {
               onClick={() => setIsMenuOpen(false)}
             >
               New
+            </Link>
+            <Link 
+              to="/promo" 
+              className={`block px-3 py-2 hover:bg-gray-50 ${
+                isActive('/promo') ? 'text-black font-medium' : 'text-gray-900'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Промокоды
             </Link>
             <Link 
               to="/all" 

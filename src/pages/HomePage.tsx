@@ -1,12 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, ArrowRight } from 'lucide-react';
-import { CategoryFilter } from '../components/CategoryFilter';
-import { FilterModal, FilterState, defaultFilters } from '../components/FilterModal';
-import { ProductGrid } from '../components/ProductGrid';
 import { ProductModal } from '../components/ProductModal';
-import { CartSidebar } from '../components/CartSidebar';
-import { SearchBar } from '../components/SearchBar';
+import { PromoCodeSection } from '../components/PromoCodeSection';
 import { useProducts } from '../hooks/useProducts';
 import { Product } from '../types';
 
@@ -112,6 +108,9 @@ export function HomePage() {
           )}
         </div>
 
+        {/* Секция промокодов */}
+        <PromoCodeSection />
+
         {/* Информационный блок */}
         <div className="bg-gray-50 rounded-lg p-8 mb-8">
           <div className="max-w-4xl mx-auto">
@@ -167,10 +166,6 @@ export function HomePage() {
         onProductClick={setSelectedProduct}
       />
 
-      <CartSidebar
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-      />
     </>
   );
 }

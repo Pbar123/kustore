@@ -20,7 +20,7 @@ const userStates = new Map();
 const ADD_PRODUCT_STATES = {
   WAITING_NAME: 'waiting_name',
   WAITING_PRICE: 'waiting_price',
-  WAITING_SALE_PRICE: 'waiting_sale_price',
+  WAITING_FAKE_PRICE: 'waiting_fake_price',
   WAITING_CATEGORY: 'waiting_category',
   WAITING_SUBCATEGORY: 'waiting_subcategory',
   WAITING_COLOR: 'waiting_color',
@@ -32,7 +32,6 @@ const ADD_PRODUCT_STATES = {
   WAITING_IMAGES: 'waiting_images',
   WAITING_FEATURES: 'waiting_features',
   WAITING_IS_NEW: 'waiting_is_new',
-  WAITING_IS_ON_SALE: 'waiting_is_on_sale',
   CONFIRM: 'confirm'
 };
 
@@ -41,6 +40,21 @@ const EDIT_PRODUCT_STATES = {
   WAITING_PRODUCT_ID: 'waiting_product_id',
   WAITING_FIELD: 'waiting_field',
   WAITING_VALUE: 'waiting_value'
+};
+
+// Состояния для промокодов
+const PROMO_CODE_STATES = {
+  WAITING_CODE: 'waiting_code',
+  WAITING_NAME: 'waiting_name',
+  WAITING_DESCRIPTION: 'waiting_description',
+  WAITING_DISCOUNT_TYPE: 'waiting_discount_type',
+  WAITING_DISCOUNT_VALUE: 'waiting_discount_value',
+  WAITING_MIN_ORDER: 'waiting_min_order',
+  WAITING_MIN_ITEMS: 'waiting_min_items',
+  WAITING_CATEGORIES: 'waiting_categories',
+  WAITING_MAX_USES: 'waiting_max_uses',
+  WAITING_VALID_UNTIL: 'waiting_valid_until',
+  CONFIRM: 'confirm'
 };
 
 // Категории товаров
@@ -73,8 +87,9 @@ function getMainMenu() {
     reply_markup: {
       keyboard: [
         ['➕ Добавить товар', '✏️ Редактировать товар'],
-        ['👁️ Скрыть товар', '📋 Список товаров'],
-        ['📊 Статистика', '❌ Отмена']
+        ['🎫 Управление промокодами', '👁️ Скрыть товар'],
+        ['📋 Список товаров', '📊 Статистика'],
+        ['❌ Отмена']
       ],
       resize_keyboard: true,
       one_time_keyboard: false
@@ -134,6 +149,34 @@ function getYesNoMenu() {
   };
 }
 
+// Меню промокодов
+function getPromoCodeMenu() {
+  return {
+    reply_markup: {
+      keyboard: [
+        ['➕ Создать промокод', '📋 Список промокодов'],
+        ['✏️ Редактировать промокод', '🗑️ Удалить промокод'],
+        ['❌ Назад в главное меню']
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: false
+    }
+  };
+}
+
+// Меню типов скидки
+function getDiscountTypeMenu() {
+  return {
+    reply_markup: {
+      keyboard: [
+        ['📊 Процент (%)', '💰 Фиксированная сумма (руб.)'],
+        ['❌ Отмена']
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    }
+  };
+}
 // Команда /start
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
@@ -165,6 +208,8 @@ bot.on('message', async (msg) => {
       await startAddProduct(chatId);
     } else if (text === '✏️ Редактировать товар') {
       await startEditProduct(chatId);
+    } else if (text === '🎫 Управление промокодами') {
+      await showPromoCodeMenu(chatId);
     } else if (text === '👁️ Скрыть товар') {
       await startHideProduct(chatId);
     } else if (text === '📋 Список товаров') {
@@ -182,6 +227,13 @@ bot.on('message', async (msg) => {
     // Обработка состояний редактирования товара
     else if (userState.action === 'edit_product') {
       await handleEditProductState(chatId, text, userState);
+    }
+    // Обработка промокодов
+    else if (userState.action === 'promo_menu') {
+      await handlePromoMenuState(chatId, text, userState);
+    }
+    else if (userState.action === 'add_promo') {
+      await handleAddPromoState(chatId, text, userState);
     }
     // Обработка скрытия товара
     else if (userState.action === 'hide_product') {
@@ -226,22 +278,20 @@ async function handleAddProductState(chatId, text, userState) {
         bot.sendMessage(chatId, '❌ Введите корректную цену (число больше 0):');
         return;
       }
-      product.price = price;
-      userState.state = ADD_PRODUCT_STATES.WAITING_SALE_PRICE;
+      product.real_price = price;
+      userState.state = ADD_PRODUCT_STATES.WAITING_FAKE_PRICE;
       bot.sendMessage(chatId, 
-        '🏷️ Введите цену со скидкой (или "нет" если скидки нет):'
+        '🏷️ Введите зачеркнутую цену (должна быть больше реальной):'
       );
       break;
       
-    case ADD_PRODUCT_STATES.WAITING_SALE_PRICE:
-      if (text.toLowerCase() !== 'нет') {
-        const salePrice = parseFloat(text);
-        if (isNaN(salePrice) || salePrice <= 0) {
-          bot.sendMessage(chatId, '❌ Введите корректную цену со скидкой или "нет":');
-          return;
-        }
-        product.sale_price = salePrice;
+    case ADD_PRODUCT_STATES.WAITING_FAKE_PRICE:
+      const fakePrice = parseFloat(text);
+      if (isNaN(fakePrice) || fakePrice <= product.real_price) {
+        bot.sendMessage(chatId, '❌ Зачеркнутая цена должна быть больше реальной цены:');
+        return;
       }
+      product.fake_original_price = fakePrice;
       userState.state = ADD_PRODUCT_STATES.WAITING_CATEGORY;
       bot.sendMessage(chatId, '📂 Выберите категорию товара:', getCategoryMenu());
       break;
@@ -359,12 +409,6 @@ async function handleAddProductState(chatId, text, userState) {
       
     case ADD_PRODUCT_STATES.WAITING_IS_NEW:
       product.is_new = text === '✅ Да';
-      userState.state = ADD_PRODUCT_STATES.WAITING_IS_ON_SALE;
-      bot.sendMessage(chatId, '🏷️ Товар участвует в распродаже?', getYesNoMenu());
-      break;
-      
-    case ADD_PRODUCT_STATES.WAITING_IS_ON_SALE:
-      product.is_on_sale = text === '✅ Да';
       product.in_stock = true; // По умолчанию в наличии
       
       userState.state = ADD_PRODUCT_STATES.CONFIRM;
@@ -392,8 +436,8 @@ async function showProductPreview(chatId, product) {
 🛍️ *Превью товара:*
 
 📝 *Название:* ${product.name}
-💰 *Цена:* ${product.price} руб.
-${product.sale_price ? `🏷️ *Цена со скидкой:* ${product.sale_price} руб.\n` : ''}
+💰 *Реальная цена:* ${product.real_price} руб.
+🏷️ *Зачеркнутая цена:* ${product.fake_original_price} руб.
 📂 *Категория:* ${product.category}
 ${product.subcategory ? `📁 *Подкатегория:* ${product.subcategory}\n` : ''}
 ${product.color ? `🎨 *Цвет:* ${product.color}\n` : ''}
@@ -404,7 +448,6 @@ ${product.color ? `🎨 *Цвет:* ${product.color}\n` : ''}
 🖼️ *Изображения:* ${product.images.length} шт.
 ${product.features && product.features.length > 0 ? `✨ *Особенности:* ${product.features.join(', ')}\n` : ''}
 🆕 *Новинка:* ${product.is_new ? 'Да' : 'Нет'}
-🏷️ *Распродажа:* ${product.is_on_sale ? 'Да' : 'Нет'}
   `;
   
   bot.sendMessage(chatId, preview, {
@@ -554,8 +597,8 @@ async function showEditMenu(chatId, product) {
 async function selectFieldToEdit(chatId, fieldName, userState) {
   const fieldMap = {
     '📝 Название': 'name',
-    '💰 Цена': 'price',
-    '🏷️ Цена со скидкой': 'sale_price',
+    '💰 Цена': 'real_price',
+    '🏷️ Зачеркнутая цена': 'fake_original_price',
     '📂 Категория': 'category',
     '🎨 Цвет': 'color',
     '📝 Описание': 'description',
@@ -564,7 +607,6 @@ async function selectFieldToEdit(chatId, fieldName, userState) {
     '✨ Особенности': 'features',
     '🖼️ Изображения': 'images',
     '🆕 Новинка': 'is_new',
-    '🏷️ Распродажа': 'is_on_sale',
     '👁️ Скрыть/Показать': 'in_stock'
   };
   
@@ -584,11 +626,11 @@ async function selectFieldToEdit(chatId, fieldName, userState) {
     case 'name':
       prompt = `📝 Текущее название: ${currentValue}\nВведите новое название:`;
       break;
-    case 'price':
+    case 'real_price':
       prompt = `💰 Текущая цена: ${currentValue} руб.\nВведите новую цену:`;
       break;
-    case 'sale_price':
-      prompt = `🏷️ Текущая цена со скидкой: ${currentValue || 'не установлена'}\nВведите новую цену со скидкой (или "удалить"):`;
+    case 'fake_original_price':
+      prompt = `🏷️ Текущая зачеркнутая цена: ${currentValue} руб.\nВведите новую зачеркнутую цену:`;
       break;
     case 'category':
       prompt = `📂 Текущая категория: ${currentValue}\nВыберите новую категорию:`;
@@ -607,11 +649,9 @@ async function selectFieldToEdit(chatId, fieldName, userState) {
       prompt = `🖼️ Текущие изображения: ${currentValue && currentValue.length > 0 ? currentValue.length + ' шт.' : 'не указаны'}\nВведите новые пути к изображениям через запятую:`;
       break;
     case 'is_new':
-    case 'is_on_sale':
     case 'in_stock':
       const labels = {
         'is_new': 'новинка',
-        'is_on_sale': 'участие в распродаже',
         'in_stock': 'наличие на складе'
       };
       prompt = `Текущее значение (${labels[field]}): ${currentValue ? 'Да' : 'Нет'}\nИзменить на:`;
@@ -633,7 +673,7 @@ async function updateProductField(chatId, newValue, userState) {
     
     // Обработка значений по типу поля
     switch (editField) {
-      case 'price':
+      case 'real_price':
         processedValue = parseFloat(newValue);
         if (isNaN(processedValue) || processedValue <= 0) {
           bot.sendMessage(chatId, '❌ Введите корректную цену (число больше 0):');
@@ -641,15 +681,11 @@ async function updateProductField(chatId, newValue, userState) {
         }
         break;
         
-      case 'sale_price':
-        if (newValue.toLowerCase() === 'удалить') {
-          processedValue = null;
-        } else {
-          processedValue = parseFloat(newValue);
-          if (isNaN(processedValue) || processedValue <= 0) {
-            bot.sendMessage(chatId, '❌ Введите корректную цену или "удалить":');
-            return;
-          }
+      case 'fake_original_price':
+        processedValue = parseFloat(newValue);
+        if (isNaN(processedValue) || processedValue <= 0) {
+          bot.sendMessage(chatId, '❌ Введите корректную зачеркнутую цену:');
+          return;
         }
         break;
         
@@ -683,7 +719,6 @@ async function updateProductField(chatId, newValue, userState) {
         return;
         
       case 'is_new':
-      case 'is_on_sale':
       case 'in_stock':
         processedValue = newValue === '✅ Да';
         break;
@@ -804,7 +839,7 @@ async function showProductsList(chatId) {
     
     let message = '📋 *Список товаров (последние 20):*\n\n';
     data.forEach((product, index) => {
-      message += `${index + 1}. ${product.name} (${product.real_price} руб.)\n`;
+      const status = product.in_stock ? '👁️' : '🙈';
       message += `${index + 1}. ${status} ${product.name}\n`;
       message += `   💰 ${product.real_price} руб. | 📂 ${product.category}\n`;
       message += `   🆔 \`${product.id}\`\n\n`;
@@ -834,7 +869,6 @@ async function showStatistics(chatId) {
     const totalProducts = products.length;
     const visibleProducts = products.filter(p => p.in_stock).length;
     const newProducts = products.filter(p => p.is_new).length;
-    const saleProducts = products.filter(p => p.is_on_sale).length;
     
     const totalOrders = orders.length;
     const newOrders = orders.filter(o => o.status === 'new').length;
@@ -844,6 +878,14 @@ async function showStatistics(chatId) {
       .filter(o => o.status === 'delivered')
       .reduce((sum, order) => sum + parseFloat(order.total_amount), 0);
     
+    // Статистика по промокодам
+    const { data: promoCodes } = await supabase
+      .from('promo_codes')
+      .select('*');
+    
+    const activePromoCodes = promoCodes ? promoCodes.filter(p => p.is_active).length : 0;
+    const totalPromoCodes = promoCodes ? promoCodes.length : 0;
+    
     const message = `
 📊 *Статистика магазина:*
 
@@ -851,7 +893,11 @@ async function showStatistics(chatId) {
 • Всего товаров: ${totalProducts}
 • Видимых: ${visibleProducts}
 • Новинок: ${newProducts}
-• В распродаже: ${saleProducts}
+
+
+🎫 *Промокоды:*
+• Всего промокодов: ${totalPromoCodes}
+• Активных: ${activePromoCodes}
 
 📦 *Заказы:*
 • Всего заказов: ${totalOrders}
@@ -867,6 +913,307 @@ async function showStatistics(chatId) {
   } catch (error) {
     console.error('Error fetching statistics:', error);
     bot.sendMessage(chatId, '❌ Ошибка при получении статистики.');
+  }
+}
+
+// Показать меню промокодов
+async function showPromoCodeMenu(chatId) {
+  userStates.set(chatId, {
+    action: 'promo_menu'
+  });
+  
+  bot.sendMessage(chatId, 
+    '🎫 *Управление промокодами*\n\n' +
+    'Выберите действие:', 
+    { ...getPromoCodeMenu(), parse_mode: 'Markdown' }
+  );
+}
+
+// Обработка меню промокодов
+async function handlePromoMenuState(chatId, text, userState) {
+  switch (text) {
+    case '➕ Создать промокод':
+      await startAddPromoCode(chatId);
+      break;
+    case '📋 Список промокодов':
+      await showPromoCodesList(chatId);
+      break;
+    case '✏️ Редактировать промокод':
+      bot.sendMessage(chatId, '🚧 Функция в разработке');
+      break;
+    case '🗑️ Удалить промокод':
+      bot.sendMessage(chatId, '🚧 Функция в разработке');
+      break;
+    case '❌ Назад в главное меню':
+      userStates.delete(chatId);
+      bot.sendMessage(chatId, '✅ Возврат в главное меню.', getMainMenu());
+      break;
+    default:
+      bot.sendMessage(chatId, '❌ Выберите действие из меню.', getPromoCodeMenu());
+  }
+}
+
+// Начать создание промокода
+async function startAddPromoCode(chatId) {
+  userStates.set(chatId, {
+    action: 'add_promo',
+    state: PROMO_CODE_STATES.WAITING_CODE,
+    promo: {}
+  });
+  
+  bot.sendMessage(chatId, 
+    '➕ *Создание промокода*\n\n' +
+    '🏷️ Введите код промокода (например: SHIRTS10):', 
+    { parse_mode: 'Markdown' }
+  );
+}
+
+// Обработка создания промокода
+async function handleAddPromoState(chatId, text, userState) {
+  const { state, promo } = userState;
+  
+  switch (state) {
+    case PROMO_CODE_STATES.WAITING_CODE:
+      promo.code = text.toUpperCase();
+      userState.state = PROMO_CODE_STATES.WAITING_NAME;
+      bot.sendMessage(chatId, '📝 Введите название промокода:');
+      break;
+      
+    case PROMO_CODE_STATES.WAITING_NAME:
+      promo.name = text;
+      userState.state = PROMO_CODE_STATES.WAITING_DESCRIPTION;
+      bot.sendMessage(chatId, '📄 Введите описание промокода:');
+      break;
+      
+    case PROMO_CODE_STATES.WAITING_DESCRIPTION:
+      promo.description = text;
+      userState.state = PROMO_CODE_STATES.WAITING_DISCOUNT_TYPE;
+      bot.sendMessage(chatId, '💰 Выберите тип скидки:', getDiscountTypeMenu());
+      break;
+      
+    case PROMO_CODE_STATES.WAITING_DISCOUNT_TYPE:
+      if (text === '📊 Процент (%)') {
+        promo.discount_type = 'percentage';
+        userState.state = PROMO_CODE_STATES.WAITING_DISCOUNT_VALUE;
+        bot.sendMessage(chatId, '📊 Введите размер скидки в процентах (например: 10):');
+      } else if (text === '💰 Фиксированная сумма (руб.)') {
+        promo.discount_type = 'fixed_amount';
+        userState.state = PROMO_CODE_STATES.WAITING_DISCOUNT_VALUE;
+        bot.sendMessage(chatId, '💰 Введите размер скидки в рублях (например: 500):');
+      } else {
+        bot.sendMessage(chatId, '❌ Выберите тип скидки из предложенных:', getDiscountTypeMenu());
+        return;
+      }
+      break;
+      
+    case PROMO_CODE_STATES.WAITING_DISCOUNT_VALUE:
+      const discountValue = parseFloat(text);
+      if (isNaN(discountValue) || discountValue <= 0) {
+        bot.sendMessage(chatId, '❌ Введите корректное значение скидки (число больше 0):');
+        return;
+      }
+      if (promo.discount_type === 'percentage' && discountValue > 100) {
+        bot.sendMessage(chatId, '❌ Процент скидки не может быть больше 100:');
+        return;
+      }
+      promo.discount_value = discountValue;
+      userState.state = PROMO_CODE_STATES.WAITING_MIN_ORDER;
+      bot.sendMessage(chatId, '📦 Введите минимальную сумму заказа (или 0 если нет ограничения):');
+      break;
+      
+    case PROMO_CODE_STATES.WAITING_MIN_ORDER:
+      const minOrder = parseFloat(text);
+      if (isNaN(minOrder) || minOrder < 0) {
+        bot.sendMessage(chatId, '❌ Введите корректную минимальную сумму (число >= 0):');
+        return;
+      }
+      promo.min_order_amount = minOrder;
+      userState.state = PROMO_CODE_STATES.WAITING_MIN_ITEMS;
+      bot.sendMessage(chatId, '🛍️ Введите минимальное количество товаров (по умолчанию 1):');
+      break;
+      
+    case PROMO_CODE_STATES.WAITING_MIN_ITEMS:
+      const minItems = parseInt(text);
+      if (isNaN(minItems) || minItems < 1) {
+        bot.sendMessage(chatId, '❌ Введите корректное количество товаров (число >= 1):');
+        return;
+      }
+      promo.min_items_count = minItems;
+      userState.state = PROMO_CODE_STATES.WAITING_CATEGORIES;
+      bot.sendMessage(chatId, 
+        '📂 Выберите категории товаров (через запятую) или "все" для всех категорий:\n' +
+        'Доступные: ' + CATEGORIES.join(', ')
+      );
+      break;
+      
+    case PROMO_CODE_STATES.WAITING_CATEGORIES:
+      if (text.toLowerCase() === 'все') {
+        promo.categories = [];
+      } else {
+        const categories = text.split(',').map(cat => cat.trim().toLowerCase());
+        const validCategories = categories.filter(cat => CATEGORIES.includes(cat));
+        if (validCategories.length === 0) {
+          bot.sendMessage(chatId, '❌ Введите корректные категории из списка или "все":');
+          return;
+        }
+        promo.categories = validCategories;
+      }
+      userState.state = PROMO_CODE_STATES.WAITING_MAX_USES;
+      bot.sendMessage(chatId, '🔢 Введите максимальное количество использований (или "без ограничений"):');
+      break;
+      
+    case PROMO_CODE_STATES.WAITING_MAX_USES:
+      if (text.toLowerCase() === 'без ограничений') {
+        promo.max_uses = null;
+      } else {
+        const maxUses = parseInt(text);
+        if (isNaN(maxUses) || maxUses < 1) {
+          bot.sendMessage(chatId, '❌ Введите корректное количество или "без ограничений":');
+          return;
+        }
+        promo.max_uses = maxUses;
+      }
+      userState.state = PROMO_CODE_STATES.WAITING_VALID_UNTIL;
+      bot.sendMessage(chatId, '📅 Введите дату окончания действия (в формате ДД.ММ.ГГГГ):');
+      break;
+      
+    case PROMO_CODE_STATES.WAITING_VALID_UNTIL:
+      const dateMatch = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+      if (!dateMatch) {
+        bot.sendMessage(chatId, '❌ Введите дату в формате ДД.ММ.ГГГГ (например: 31.12.2024):');
+        return;
+      }
+      
+      const [, day, month, year] = dateMatch;
+      const validUntil = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      
+      if (validUntil <= new Date()) {
+        bot.sendMessage(chatId, '❌ Дата должна быть в будущем:');
+        return;
+      }
+      
+      promo.valid_until = validUntil.toISOString();
+      promo.current_uses = 0;
+      promo.is_active = true;
+      
+      userState.state = PROMO_CODE_STATES.CONFIRM;
+      await showPromoCodePreview(chatId, promo);
+      break;
+      
+    case PROMO_CODE_STATES.CONFIRM:
+      if (text === '✅ Сохранить') {
+        await savePromoCode(chatId, promo);
+      } else if (text === '❌ Отменить') {
+        userStates.delete(chatId);
+        bot.sendMessage(chatId, '❌ Создание промокода отменено.', getPromoCodeMenu());
+      } else {
+        bot.sendMessage(chatId, '❌ Выберите "Сохранить" или "Отменить".');
+      }
+      break;
+  }
+  
+  userStates.set(chatId, userState);
+}
+
+// Показать превью промокода
+async function showPromoCodePreview(chatId, promo) {
+  const discountText = promo.discount_type === 'percentage' 
+    ? `${promo.discount_value}%` 
+    : `${promo.discount_value} руб.`;
+    
+  const categoriesText = promo.categories.length === 0 
+    ? 'Все товары' 
+    : promo.categories.join(', ');
+    
+  const maxUsesText = promo.max_uses === null 
+    ? 'Без ограничений' 
+    : promo.max_uses.toString();
+  
+  const preview = `
+🎫 *Превью промокода:*
+
+🏷️ *Код:* ${promo.code}
+📝 *Название:* ${promo.name}
+📄 *Описание:* ${promo.description}
+💰 *Скидка:* ${discountText}
+📦 *Минимальная сумма:* ${promo.min_order_amount} руб.
+🛍️ *Минимум товаров:* ${promo.min_items_count} шт.
+📂 *Категории:* ${categoriesText}
+🔢 *Максимум использований:* ${maxUsesText}
+📅 *Действует до:* ${new Date(promo.valid_until).toLocaleDateString('ru-RU')}
+  `;
+  
+  bot.sendMessage(chatId, preview, {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      keyboard: [
+        ['✅ Сохранить', '❌ Отменить']
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    }
+  });
+}
+
+// Сохранить промокод
+async function savePromoCode(chatId, promo) {
+  try {
+    const { data, error } = await supabase
+      .from('promo_codes')
+      .insert([promo])
+      .select();
+    
+    if (error) throw error;
+    
+    userStates.delete(chatId);
+    bot.sendMessage(chatId, 
+      `✅ *Промокод успешно создан!*\n\n` +
+      `🏷️ Код: ${promo.code}\n` +
+      `📝 Название: ${promo.name}`, 
+      { ...getPromoCodeMenu(), parse_mode: 'Markdown' }
+    );
+  } catch (error) {
+    console.error('Error saving promo code:', error);
+    bot.sendMessage(chatId, 
+      `❌ Ошибка при сохранении промокода: ${error.message}\n\n` +
+      'Попробуйте еще раз.'
+    );
+  }
+}
+
+// Показать список промокодов
+async function showPromoCodesList(chatId) {
+  try {
+    const { data, error } = await supabase
+      .from('promo_codes')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    
+    if (error) throw error;
+    
+    if (data.length === 0) {
+      bot.sendMessage(chatId, '🎫 Промокоды не найдены.');
+      return;
+    }
+    
+    let message = '🎫 *Список промокодов (последние 10):*\n\n';
+    data.forEach((promo, index) => {
+      const status = promo.is_active ? '✅' : '❌';
+      const discountText = promo.discount_type === 'percentage' 
+        ? `${promo.discount_value}%` 
+        : `${promo.discount_value} руб.`;
+      
+      message += `${index + 1}. ${status} ${promo.code} (-${discountText})\n`;
+      message += `   📝 ${promo.name}\n`;
+      message += `   📅 До ${new Date(promo.valid_until).toLocaleDateString('ru-RU')}\n`;
+      message += `   🔢 Использований: ${promo.current_uses}${promo.max_uses ? `/${promo.max_uses}` : ''}\n\n`;
+    });
+    
+    bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+  } catch (error) {
+    console.error('Error fetching promo codes list:', error);
+    bot.sendMessage(chatId, '❌ Ошибка при получении списка промокодов.');
   }
 }
 

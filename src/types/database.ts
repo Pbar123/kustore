@@ -69,6 +69,62 @@ export interface Database {
           features?: string[];
         };
       };
+      promo_codes: {
+        Row: {
+          id: string;
+          code: string;
+          name: string;
+          description: string;
+          discount_type: 'percentage' | 'fixed_amount';
+          discount_value: number;
+          min_order_amount: number;
+          min_items_count: number;
+          categories: string[];
+          max_uses: number | null;
+          current_uses: number;
+          valid_from: string;
+          valid_until: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          name: string;
+          description: string;
+          discount_type: 'percentage' | 'fixed_amount';
+          discount_value: number;
+          min_order_amount?: number;
+          min_items_count?: number;
+          categories?: string[];
+          max_uses?: number | null;
+          current_uses?: number;
+          valid_from?: string;
+          valid_until: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          name?: string;
+          description?: string;
+          discount_type?: 'percentage' | 'fixed_amount';
+          discount_value?: number;
+          min_order_amount?: number;
+          min_items_count?: number;
+          categories?: string[];
+          max_uses?: number | null;
+          current_uses?: number;
+          valid_from?: string;
+          valid_until?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }

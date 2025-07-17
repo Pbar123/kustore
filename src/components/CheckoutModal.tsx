@@ -8,13 +8,24 @@ import { supabase } from '../lib/supabase';
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
+  appliedPromoCode?: string;
+  promoDiscount?: number;
+  finalTotal?: number;
 }
 
-export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
+export function CheckoutModal({ 
+  isOpen, 
+  onClose, 
+  appliedPromoCode = '', 
+  promoDiscount = 0,
+  finalTotal 
+}: CheckoutModalProps) {
   const { state, dispatch } = useCart();
   const { state: authState } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  
+  const orderTotal = finalTotal || state.total;
   
   const [formData, setFormData] = useState({
     customer_name: authState.user?.first_name || '',
@@ -76,7 +87,7 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         .insert({
           user_id: authState.user.id,
           items: orderItems,
-          total_amount: state.total,
+          total_amount: orderTotal,
           ...formData
         })
         .select()
@@ -85,7 +96,7 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
       if (error) throw error;
 
       // Отправляем уведомление в Telegram
-      await sendTelegramNotification(order.id, orderItems, formData, state.total);
+      await sendTelegramNotification(order.id, orderItems, formData, orderTotal, appliedPromoCode, promoDiscount);
 
       // Очищаем корзину
       dispatch({ type: 'CLEAR_CART' });
@@ -99,10 +110,17 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
     }
   };
 
-  const sendTelegramNotification = async (orderId: string, items: OrderItem[], customerData: typeof formData, total: number) => {
+  const sendTelegramNotification = async (
+    orderId: string, 
+    items: OrderItem[], 
+    customerData: typeof formData, 
+    total: number,
+    promoCode?: string,
+    discount?: number
+  ) => {
     try {
       // Формируем сообщение для Telegram
-      const message = `
+      let message = `
 🛍️ *НОВЫЙ ЗАКАЗ #${orderId.slice(-8)}*
 
 👤 *Клиент:*
@@ -112,8 +130,19 @@ ${customerData.customer_email ? `• Email: ${customerData.customer_email}` : ''
 
 📦 *Товары:*
 ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} = ${item.total} руб.`).join('\n')}
+`;
 
-💰 *Итого: ${total} руб.*
+      if (promoCode && discount && discount > 0) {
+        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+        message += `\n💰 *Стоимость:*\n`;
+        message += `• Сумма товаров: ${subtotal} руб.\n`;
+        message += `• Промокод: ${promoCode} (-${discount} руб.)\n`;
+        message += `• К оплате: ${total} руб.\n`;
+      } else {
+        message += `\n💰 *Итого: ${total} руб.*\n`;
+      }
+
+      message += `
 
 🚚 *Доставка:*
 • Способ: ${getDeliveryMethodName(customerData.delivery_method)}
@@ -233,7 +262,19 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
             </div>
             <div className="flex justify-between items-center text-lg font-bold border-t pt-3">
               <span>Итого:</span>
-              <span>{state.total.toFixed(2)} руб.</span>
+              <div className="text-right">
+                {promoDiscount > 0 && (
+                  <>
+                    <div className="text-sm text-gray-500 line-through font-normal">
+                      {state.total.toFixed(2)} руб.
+                    </div>
+                    <div className="text-xs text-green-600 font-normal">
+                      Промокод {appliedPromoCode}: -{promoDiscount.toFixed(2)} руб.
+                    </div>
+                  </>
+                )}
+                <span>{orderTotal.toFixed(2)} руб.</span>
+              </div>
             </div>
           </div>
 

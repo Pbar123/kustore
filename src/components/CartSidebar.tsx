@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { PromoCodeInput } from './PromoCodeInput';
 import { CheckoutModal } from './CheckoutModal';
 
 interface CartSidebarProps {
@@ -11,6 +12,8 @@ interface CartSidebarProps {
 export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const { state, dispatch } = useCart();
   const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false);
+  const [appliedPromoCode, setAppliedPromoCode] = React.useState<string>('');
+  const [promoDiscount, setPromoDiscount] = React.useState(0);
 
   const updateQuantity = (productId: string, size: string, quantity: number) => {
     if (quantity === 0) {
@@ -23,6 +26,18 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const removeItem = (productId: string, size: string) => {
     dispatch({ type: 'REMOVE_ITEM', payload: { productId, size } });
   };
+
+  const handlePromoApplied = (discount: number, promoCode: string) => {
+    setPromoDiscount(discount);
+    setAppliedPromoCode(promoCode);
+  };
+
+  const handlePromoRemoved = () => {
+    setPromoDiscount(0);
+    setAppliedPromoCode('');
+  };
+
+  const finalTotal = state.total - promoDiscount;
 
   return (
     <>
@@ -108,9 +123,27 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           {/* Footer */}
           {state.items.length > 0 && (
             <div className="border-t border-gray-200 p-6">
+              <PromoCodeInput
+                cartItems={state.items}
+                cartTotal={state.total}
+                onPromoApplied={handlePromoApplied}
+                onPromoRemoved={handlePromoRemoved}
+                appliedPromoCode={appliedPromoCode}
+                discount={promoDiscount}
+              />
+              
               <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-medium text-gray-900">Total:</span>
-                <span className="text-xl font-bold text-gray-900">{state.total.toFixed(2)} руб.</span>
+                <span className="text-lg font-medium text-gray-900">Итого:</span>
+                <div className="text-right">
+                  {promoDiscount > 0 && (
+                    <div className="text-sm text-gray-500 line-through">
+                      {state.total.toFixed(2)} руб.
+                    </div>
+                  )}
+                  <div className="text-xl font-bold text-gray-900">
+                    {finalTotal.toFixed(2)} руб.
+                  </div>
+                </div>
               </div>
               <button 
                 onClick={() => setIsCheckoutOpen(true)}
@@ -125,7 +158,10 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       
       <CheckoutModal 
         isOpen={isCheckoutOpen} 
-        onClose={() => setIsCheckoutOpen(false)} 
+        onClose={() => setIsCheckoutOpen(false)}
+        appliedPromoCode={appliedPromoCode}
+        promoDiscount={promoDiscount}
+        finalTotal={finalTotal}
       />
     </>
   );
