@@ -123,13 +123,6 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
     }));
   };
 
-  const handleBooleanFilter = (key: 'isNew' | 'isOnSale', value: boolean | null) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: prev[key] === value ? null : value
-    }));
-  };
-
   const applyFilters = () => {
     onFiltersChange(filters);
     onClose();
