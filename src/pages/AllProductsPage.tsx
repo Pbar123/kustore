@@ -158,7 +158,9 @@ export function AllProductsPage() {
 
       <ProductModal
         product={selectedProduct}
+        allProducts={products}
         onClose={() => setSelectedProduct(null)}
+        onProductClick={setSelectedProduct}
       />
 
       <FilterModal

@@ -114,7 +114,9 @@ export function HomePage() {
 
       <ProductModal
         product={selectedProduct}
+        allProducts={products}
         onClose={() => setSelectedProduct(null)}
+        onProductClick={setSelectedProduct}
       />
 
       <FilterModal

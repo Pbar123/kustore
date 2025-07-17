@@ -7,7 +7,7 @@ import { useProducts } from '../hooks/useProducts';
 import { Product } from '../types';
 
 export function NewPage() {
-  const { getNewProducts, loading, error } = useProducts();
+  const { products, getNewProducts, loading, error } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -62,7 +62,9 @@ export function NewPage() {
 
       <ProductModal
         product={selectedProduct}
+        allProducts={products}
         onClose={() => setSelectedProduct(null)}
+        onProductClick={setSelectedProduct}
       />
 
       <CartSidebar

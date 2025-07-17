@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { X, Plus, Minus, ChevronLeft, ChevronRight, Ruler } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
+import { ProductCard } from './ProductCard';
 
 interface ProductModalProps {
   product: Product | null;
+  allProducts: Product[];
   onClose: () => void;
+  onProductClick: (product: Product) => void;
 }
 
-export function ProductModal({ product, onClose }: ProductModalProps) {
+export function ProductModal({ product, allProducts, onClose, onProductClick }: ProductModalProps) {
   const { dispatch, state } = useCart();
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
@@ -20,6 +23,10 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
   const images = product.images || [product.image_url];
   const altTexts = product.image_alt_texts || [product.name];
 
+  // Получаем рекомендации - товары из той же категории, исключая текущий товар
+  const recommendations = allProducts
+    .filter(p => p.category === product.category && p.id !== product.id && p.in_stock)
+    .slice(0, 4); // Показываем максимум 4 рекомендации
   const handleAddToCart = () => {
     if (!selectedSize) return;
     
@@ -345,6 +352,32 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               </div>
             </div>
           </div>
+
+          {/* Рекомендации */}
+          {recommendations.length > 0 && (
+            <div className="border-t border-gray-200 pt-8 mt-8">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">
+                Рекомендуемые товары
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {recommendations.map((recommendedProduct) => (
+                  <div key={recommendedProduct.id} className="cursor-pointer">
+                    <ProductCard
+                      product={recommendedProduct}
+                      onProductClick={(clickedProduct) => {
+                        onProductClick(clickedProduct);
+                        // Сбрасываем состояние модального окна для нового товара
+                        setSelectedSize('');
+                        setQuantity(1);
+                        setCurrentImageIndex(0);
+                        setShowMeasurements(false);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
