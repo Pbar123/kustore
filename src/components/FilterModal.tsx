@@ -15,6 +15,9 @@ export interface FilterState {
   sizes: string[];
   brands: string[];
   categories: string[];
+  isNew: boolean | null;
+  isOnSale: boolean | null;
+  inStock: boolean | null;
 }
 
 export const defaultFilters: FilterState = {
@@ -22,15 +25,19 @@ export const defaultFilters: FilterState = {
   sizes: [],
   brands: [],
   categories: [],
+  isNew: null,
+  isOnSale: null,
+  inStock: null,
 };
 
 export function FilterModal({ isOpen, onClose, products, onFiltersChange, currentFilters }: FilterModalProps) {
   const [filters, setFilters] = useState<FilterState>(currentFilters);
   const [expandedSections, setExpandedSections] = useState({
     price: true,
-    category: true,
-    size: true,
+    category: false,
+    size: false,
     brand: false,
+    status: false,
   });
 
   // Extract unique values from products database
@@ -39,13 +46,7 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
   
   // Get sizes based on selected categories or all sizes if no category selected
   const getAvailableSizes = () => {
-    let relevantProducts = products;
-    
-    if (filters.categories.length > 0) {
-      relevantProducts = products.filter(p => filters.categories.includes(p.category));
-    }
-    
-    const allSizes = Array.from(new Set(relevantProducts.flatMap(p => p.sizes)));
+    const allSizes = Array.from(new Set(products.flatMap(p => p.sizes)));
     
     // Group sizes by type for better organization
     const clothingSizes = allSizes.filter(size => ['XS', 'S', 'M', 'L', 'XL', 'XXL'].includes(size));
@@ -112,11 +113,16 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
       ...prev,
       categories: prev.categories.includes(category)
         ? prev.categories.filter(item => item !== category)
-        : [...prev.categories, category],
-      // Reset sizes when category changes
-      sizes: prev.categories.includes(category) ? prev.sizes : []
+        : [...prev.categories, category]
     }));
   };
+  const handleBooleanFilter = (key: 'isNew' | 'isOnSale', value: boolean | null) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: prev[key] === value ? null : value
+    }));
+  };
+
   const handleBooleanFilter = (key: 'isNew' | 'isOnSale', value: boolean | null) => {
     setFilters(prev => ({
       ...prev,
@@ -146,6 +152,8 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
     if (filters.categories.length > 0) count++;
     if (filters.sizes.length > 0) count++;
     if (filters.brands.length > 0) count++;
+    if (filters.isNew !== null) count++;
+    if (filters.isOnSale !== null) count++;
     return count;
   };
 
@@ -174,31 +182,16 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
 
         <div className="p-6 space-y-6">
           {/* Price Range */}
-          <div>
+          <div className="border-b border-gray-100 pb-4">
             <button
               onClick={() => toggleSection('price')}
-              className="flex items-center justify-between w-full text-left"
+              className="flex items-center justify-between w-full text-left py-2"
             >
-              <div className="flex items-center space-x-2">
-                <h3 className="text-lg font-medium text-gray-900">Цена</h3>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const resetState = {
-                      ...filters,
-                      priceRange: [minPrice, maxPrice] as [number, number]
-                    };
-                    setFilters(resetState);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              {expandedSections.price ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              <h3 className="text-base font-medium text-gray-900">Цена</h3>
+              {expandedSections.price ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
             </button>
             {expandedSections.price && (
-              <div className="mt-6 space-y-6">
+              <div className="mt-3 space-y-4">
                 {/* Input fields */}
                 <div className="flex items-center space-x-4 text-sm">
                   <div className="flex items-center space-x-2">
@@ -227,10 +220,10 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
                 
                 {/* Dual Range Slider */}
                 <div className="dual-range-slider">
-                  <div className="relative h-2 bg-gray-200 rounded-full">
+                  <div className="relative h-1.5 bg-gray-200 rounded-full">
                     {/* Active range track */}
                     <div 
-                      className="absolute h-2 bg-blue-500 rounded-full"
+                      className="absolute h-1.5 bg-blue-500 rounded-full"
                       style={{
                         left: `${((filters.priceRange[0] - minPrice) / (maxPrice - minPrice)) * 100}%`,
                         width: `${((filters.priceRange[1] - filters.priceRange[0]) / (maxPrice - minPrice)) * 100}%`
@@ -263,180 +256,229 @@ export function FilterModal({ isOpen, onClose, products, onFiltersChange, curren
           </div>
 
           {/* Categories */}
-          <div>
+          <div className="border-b border-gray-100 pb-4">
             <button
               onClick={() => toggleSection('category')}
-              className="flex items-center justify-between w-full text-left"
+              className="flex items-center justify-between w-full text-left py-2"
             >
-              <h3 className="text-lg font-medium text-gray-900">Категория одежды</h3>
-              {expandedSections.category ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              <h3 className="text-base font-medium text-gray-900">Категория</h3>
+              {expandedSections.category ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
             </button>
             {expandedSections.category && (
-              <div className="mt-4 space-y-2">
+              <div className="mt-3 grid grid-cols-2 gap-2">
                 {availableCategories.map(category => (
-                  <label key={category} className="flex items-center space-x-2">
+                  <label key={category} className="flex items-center space-x-2 text-sm">
                     <input
                       type="checkbox"
                       checked={filters.categories.includes(category)}
                       onChange={() => toggleCategoryFilter(category)}
-                      className="rounded border-gray-300 text-black focus:ring-black"
+                      className="rounded border-gray-300 text-black focus:ring-black h-3 w-3"
                     />
-                    <span className="text-gray-700 capitalize">{category}</span>
+                    <span className="text-gray-700 capitalize text-sm">{category}</span>
                   </label>
                 ))}
               </div>
             )}
           </div>
+
           {/* Sizes */}
-          <div>
+          <div className="border-b border-gray-100 pb-4">
             <button
               onClick={() => toggleSection('size')}
-              className="flex items-center justify-between w-full text-left"
+              className="flex items-center justify-between w-full text-left py-2"
             >
-              <h3 className="text-lg font-medium text-gray-900">Размер</h3>
-              {expandedSections.size ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              <h3 className="text-base font-medium text-gray-900">Размер</h3>
+              {expandedSections.size ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
             </button>
             {expandedSections.size && (
-              <div className="mt-4 space-y-4">
-                {filters.categories.length === 0 && (
-                  <p className="text-sm text-gray-500 italic">
-                    Выберите категорию, чтобы увидеть доступные размеры
-                  </p>
-                )}
-                
-                {filters.categories.some(cat => ['shirts', 'dresses', 'sweaters', 'jackets', 'skirts'].includes(cat)) && availableSizes.clothing.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Одежда</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {availableSizes.clothing.map(size => (
-                        <button
-                          key={size}
-                          onClick={() => toggleArrayFilter('sizes', size)}
-                          className={`px-3 py-2 border rounded-lg text-sm transition-colors ${
-                            filters.sizes.includes(size)
-                              ? 'bg-black text-white border-black'
-                              : 'bg-white text-gray-700 border-gray-300 hover:border-black'
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
+              <div className="mt-3">
+                <div className="space-y-3">
+                  {availableSizes.clothing.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-600 mb-2">Одежда</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {availableSizes.clothing.map(size => (
+                          <button
+                            key={size}
+                            onClick={() => toggleArrayFilter('sizes', size)}
+                            className={`px-2 py-1 border rounded text-xs transition-colors ${
+                              filters.sizes.includes(size)
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-black'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                {filters.categories.includes('jeans') && availableSizes.pants.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Брюки/Джинсы</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {availableSizes.pants.map(size => (
-                        <button
-                          key={size}
-                          onClick={() => toggleArrayFilter('sizes', size)}
-                          className={`px-3 py-2 border rounded-lg text-sm transition-colors ${
-                            filters.sizes.includes(size)
-                              ? 'bg-black text-white border-black'
-                              : 'bg-white text-gray-700 border-gray-300 hover:border-black'
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
+                  )}
+                  
+                  {availableSizes.pants.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-600 mb-2">Брюки</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {availableSizes.pants.map(size => (
+                          <button
+                            key={size}
+                            onClick={() => toggleArrayFilter('sizes', size)}
+                            className={`px-2 py-1 border rounded text-xs transition-colors ${
+                              filters.sizes.includes(size)
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-black'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                {filters.categories.includes('shoes') && availableSizes.shoes.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Обувь</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {availableSizes.shoes.map(size => (
-                        <button
-                          key={size}
-                          onClick={() => toggleArrayFilter('sizes', size)}
-                          className={`px-3 py-2 border rounded-lg text-sm transition-colors ${
-                            filters.sizes.includes(size)
-                              ? 'bg-black text-white border-black'
-                              : 'bg-white text-gray-700 border-gray-300 hover:border-black'
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
+                  )}
+                  
+                  {availableSizes.shoes.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-600 mb-2">Обувь</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {availableSizes.shoes.map(size => (
+                          <button
+                            key={size}
+                            onClick={() => toggleArrayFilter('sizes', size)}
+                            className={`px-2 py-1 border rounded text-xs transition-colors ${
+                              filters.sizes.includes(size)
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-black'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                {filters.categories.some(cat => ['bags', 'accessories'].includes(cat)) && availableSizes.other.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Аксессуары</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {availableSizes.other.map(size => (
-                        <button
-                          key={size}
-                          onClick={() => toggleArrayFilter('sizes', size)}
-                          className={`px-3 py-2 border rounded-lg text-sm transition-colors ${
-                            filters.sizes.includes(size)
-                              ? 'bg-black text-white border-black'
-                              : 'bg-white text-gray-700 border-gray-300 hover:border-black'
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
+                  )}
+                  
+                  {availableSizes.other.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-600 mb-2">Аксессуары</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {availableSizes.other.map(size => (
+                          <button
+                            key={size}
+                            onClick={() => toggleArrayFilter('sizes', size)}
+                            className={`px-2 py-1 border rounded text-xs transition-colors ${
+                              filters.sizes.includes(size)
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-black'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
           </div>
 
           {/* Brands */}
-          <div>
+          <div className="border-b border-gray-100 pb-4">
             <button
               onClick={() => toggleSection('brand')}
-              className="flex items-center justify-between w-full text-left"
+              className="flex items-center justify-between w-full text-left py-2"
             >
-              <h3 className="text-lg font-medium text-gray-900">Бренд</h3>
-              {expandedSections.brand ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              <h3 className="text-base font-medium text-gray-900">Бренд</h3>
+              {expandedSections.brand ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
             </button>
             {expandedSections.brand && (
-              <div className="mt-4 space-y-2">
+              <div className="mt-3 space-y-2">
                 {availableBrands.map(brand => (
-                  <label key={brand} className="flex items-center space-x-2">
+                  <label key={brand} className="flex items-center space-x-2 text-sm">
                     <input
                       type="checkbox"
                       checked={filters.brands.includes(brand)}
                       onChange={() => toggleArrayFilter('brands', brand)}
-                      className="rounded border-gray-300 text-black focus:ring-black"
+                      className="rounded border-gray-300 text-black focus:ring-black h-3 w-3"
                     />
-                    <span className="text-gray-700">{brand}</span>
+                    <span className="text-gray-700 text-sm">{brand}</span>
                   </label>
                 ))}
               </div>
             )}
           </div>
 
+          {/* Status */}
+          <div>
+            <button
+              onClick={() => toggleSection('status')}
+              className="flex items-center justify-between w-full text-left py-2"
+            >
+              <h3 className="text-base font-medium text-gray-900">Статус</h3>
+              {expandedSections.status ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
+            </button>
+            {expandedSections.status && (
+              <div className="mt-3 space-y-3">
+                <div>
+                  <h4 className="text-xs font-medium text-gray-600 mb-2">Новинки</h4>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleBooleanFilter('isNew', true)}
+                      className={`px-3 py-1 border rounded text-xs transition-colors ${
+                        filters.isNew === true
+                          ? 'bg-black text-white border-black'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-black'
+                      }`}
+                    >
+                      Только новинки
+                    </button>
+                    <button
+                      onClick={() => handleBooleanFilter('isNew', false)}
+                      className={`px-3 py-1 border rounded text-xs transition-colors ${
+                        filters.isNew === false
+                          ? 'bg-black text-white border-black'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-black'
+                      }`}
+                    >
+                      Исключить новинки
+                    </button>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-xs font-medium text-gray-600 mb-2">Наличие</h4>
+                  <label className="flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={filters.inStock === true}
+                      onChange={(e) => setFilters(prev => ({ ...prev, inStock: e.target.checked ? true : null }))}
+                      className="rounded border-gray-300 text-black focus:ring-black h-3 w-3"
+                    />
+                    <span className="text-gray-700 text-sm">Только в наличии</span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200">
+        <div className="flex items-center justify-between p-4 border-t border-gray-200">
           <button
             onClick={resetFilters}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition-colors"
           >
             Сбросить все
           </button>
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Отмена
             </button>
             <button
               onClick={applyFilters}
-              className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+              className="px-4 py-1.5 text-sm bg-black text-white rounded hover:bg-gray-800 transition-colors"
             >
               Применить
             </button>

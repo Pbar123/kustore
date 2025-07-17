@@ -72,6 +72,8 @@ export function AllProductsPage() {
     if (filters.categories.length > 0) count++;
     if (filters.sizes.length > 0) count++;
     if (filters.brands.length > 0) count++;
+    if (filters.isNew !== null) count++;
+    if (filters.inStock !== null) count++;
     return count;
   };
 
