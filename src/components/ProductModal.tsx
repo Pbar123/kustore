@@ -18,13 +18,10 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showMeasurements, setShowMeasurements] = useState(false);
 
-  if (!product) return null;
-
-  const images = product.images || [product.image_url];
-  const altTexts = product.image_alt_texts || [product.name];
-
   // Получаем рекомендации - сначала из той же категории, потом из других категорий
   const recommendations = React.useMemo(() => {
+    if (!product) return [];
+    
     // Сначала пытаемся найти товары из той же категории
     let sameCategoryProducts = allProducts.filter(p => 
       p.category === product.category && 
@@ -44,6 +41,11 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
     
     return sameCategoryProducts.slice(0, 4);
   }, [allProducts, product.category, product.id]);
+
+  if (!product) return null;
+
+  const images = product.images || [product.image_url];
+  const altTexts = product.image_alt_texts || [product.name];
 
   const handleAddToCart = () => {
     if (!selectedSize) return;
