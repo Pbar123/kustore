@@ -108,7 +108,6 @@ export function HomePage() {
         </div>
 
         {/* Секция промокодов */}
-        <PromoCodeSection />
 
         {/* Информационный блок */}
         <div className="bg-gray-50 rounded-lg p-8 mb-8">
