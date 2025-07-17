@@ -57,16 +57,6 @@ export function Header() {
               New
             </Link>
             <Link 
-              to="/promo" 
-              className={`px-3 py-2 text-sm font-medium transition-colors ${
-                isActive('/promo') 
-                  ? 'text-black border-b-2 border-black' 
-                  : 'text-gray-900 hover:text-gray-600'
-              }`}
-            >
-              Промокоды
-            </Link>
-            <Link 
               to="/all" 
               className={`px-3 py-2 text-sm font-medium transition-colors ${
                 isActive('/all') 
