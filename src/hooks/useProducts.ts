@@ -18,6 +18,14 @@ export function useProducts() {
       setLoading(true);
       setError(null);
       
+      // Проверяем подключение к Supabase
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        setError('Подключение к базе данных не настроено. Проверьте переменные окружения.');
+        setLoading(false);
+        return;
+      }
+      
       console.log('Fetching products from Supabase...');
       const { data, error } = await supabase
         .from('products')
@@ -26,7 +34,9 @@ export function useProducts() {
 
       if (error) {
         console.error('Supabase error:', error);
-        throw error;
+        setError(`Ошибка базы данных: ${error.message}`);
+        setLoading(false);
+        return;
       }
 
       console.log('Fetched products:', data);
@@ -34,6 +44,7 @@ export function useProducts() {
       if (!data || data.length === 0) {
         console.warn('No products found in database');
         setProducts([]);
+        setLoading(false);
         return;
       }
 

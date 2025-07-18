@@ -10,9 +10,18 @@ import { InfoPage } from './pages/InfoPage';
 import { AllProductsPage } from './pages/AllProductsPage';
 import { CatalogPage } from './pages/CatalogPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { AdminPage } from './pages/AdminPage';
+import { PromoCodesPage } from './pages/PromoCodesPage';
 
 function App() {
+  // Простая проверка на ошибки загрузки
+  React.useEffect(() => {
+    console.log('App component mounted');
+    console.log('Environment check:', {
+      supabaseUrl: import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing',
+      supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Missing'
+    });
+  }, []);
+
   return (
     <AuthProvider>
       <CartProvider>
@@ -28,7 +37,7 @@ function App() {
               <Route path="/new" element={<NewPage />} />
               <Route path="/all" element={<AllProductsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/promo" element={<PromoCodesPage />} />
             </Routes>
           </div>
         </Router>

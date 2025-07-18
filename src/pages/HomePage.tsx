@@ -16,15 +16,30 @@ export function HomePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-gray-600">Загрузка...</div>
+        <div className="text-center">
+          <div className="text-lg text-gray-600 mb-2">Загрузка товаров...</div>
+          <div className="text-sm text-gray-400">Подключение к базе данных</div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-red-600">Ошибка загрузки: {error}</div>
+      <div className="flex flex-col items-center justify-center min-h-screen px-4">
+        <div className="text-center max-w-md">
+          <div className="text-lg text-red-600 mb-2">Ошибка загрузки товаров</div>
+          <div className="text-sm text-gray-600 mb-4">{error}</div>
+          <div className="text-xs text-gray-500 mb-4">
+            Проверьте настройки подключения к базе данных
+          </div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Обновить страницу
+          </button>
+        </div>
       </div>
     );
   }
