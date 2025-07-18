@@ -82,16 +82,11 @@ export function CheckoutModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🚀 Начало оформления заказа');
-    console.log('📋 Состояние аутентификации:', {
-      isAuthenticated: authState.isAuthenticated,
-      user: authState.user,
-      telegram_id: authState.user?.telegram_id
-    });
-    console.log('🛒 Товары в корзине:', state.items);
-    console.log('📝 Данные формы:', formData);
-    
     if (!validateForm()) return;
+    if (!authState.user) {
+      alert('Необходимо войти в систему для оформления заказа');
+      return;
+    }
     
     setIsSubmitting(true);
     
@@ -107,87 +102,59 @@ export function CheckoutModal({
         total: Number(item.product.real_price * item.quantity)
       }));
 
-      console.log('📦 Подготовленные товары заказа:', orderItems);
-      
-      const orderData = {
-        user_id: authState.user?.telegram_id || null,
-        items: orderItems,
-        total_amount: Number(orderTotal),
-        customer_name: formData.customer_name,
-        customer_phone: formData.customer_phone,
-        customer_email: formData.customer_email || null,
-        delivery_address: `${formData.delivery_city}, ${formData.delivery_postal_code}, ${formData.delivery_street}, д. ${formData.delivery_house}${formData.delivery_apartment ? `, кв. ${formData.delivery_apartment}` : ''}`,
-        delivery_method: formData.delivery_method,
-        payment_method: formData.payment_method,
-        status: 'new'
-      };
-      
-      console.log('💾 Данные для сохранения в БД:', orderData);
 
       // Создаем заказ в базе данных
       const { data: order, error } = await supabase
         .from('orders')
-        .insert(orderData)
+        .insert({
+          user_id: authState.user?.telegram_id || null,
+          items: orderItems,
+          total_amount: Number(orderTotal),
+          customer_name: formData.customer_name,
+          customer_phone: formData.customer_phone,
+          customer_email: formData.customer_email,
+          delivery_address: `${formData.delivery_city}, ${formData.delivery_postal_code}, ${formData.delivery_street}, д. ${formData.delivery_house}${formData.delivery_apartment ? `, кв. ${formData.delivery_apartment}` : ''}`,
+          delivery_method: formData.delivery_method,
+          payment_method: formData.payment_method
+        })
         .select()
         .single();
 
       if (error) {
-        console.error('❌ Ошибка создания заказа:', error);
-        console.error('📊 Детали ошибки:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
+        console.error('Ошибка создания заказа:', error);
         throw error;
       }
 
-      console.log('✅ Заказ успешно создан:', order);
 
       // Отправляем уведомление в Telegram
       try {
-        console.log('📱 Отправка уведомления в Telegram...');
         await sendTelegramNotification(order.id, orderItems, formData, orderTotal, appliedPromoCode, promoDiscount);
-        console.log('✅ Уведомление отправлено');
       } catch (telegramError) {
-        console.warn('⚠️ Не удалось отправить уведомление в Telegram:', telegramError);
+        console.warn('Не удалось отправить уведомление в Telegram:', telegramError);
         // Не прерываем процесс, если уведомление не отправилось
       }
 
       // Очищаем корзину
       dispatch({ type: 'CLEAR_CART' });
       
-      console.log('🎉 Заказ успешно оформлен!');
       setIsSuccess(true);
     } catch (error) {
-      console.error('💥 Критическая ошибка при создании заказа:', error);
+      console.error('Ошибка при создании заказа:', error);
       
       let errorMessage = 'Произошла ошибка при оформлении заказа.';
       if (error instanceof Error) {
-        console.error('🔍 Анализ ошибки:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        });
-        
-        if (error.message.includes('duplicate key') || error.message.includes('23505')) {
+        if (error.message.includes('duplicate key')) {
           errorMessage = 'Заказ уже существует. Попробуйте обновить страницу.';
-        } else if (error.message.includes('foreign key') || error.message.includes('23503')) {
+        } else if (error.message.includes('foreign key')) {
           errorMessage = 'Ошибка данных пользователя. Попробуйте войти заново.';
-        } else if (error.message.includes('row-level security') || error.message.includes('42501')) {
-          errorMessage = 'Ошибка прав доступа. Обратитесь к администратору.';
-        } else if (error.message.includes('not-null') || error.message.includes('23502')) {
-          errorMessage = 'Не заполнены обязательные поля. Проверьте форму.';
         } else {
           errorMessage = `Ошибка: ${error.message}`;
         }
       }
       
-      console.error('📢 Сообщение пользователю:', errorMessage);
       alert(errorMessage);
     } finally {
       setIsSubmitting(false);
-      console.log('🏁 Завершение процесса оформления заказа');
     }
   };
 
