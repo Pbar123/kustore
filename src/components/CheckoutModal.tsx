@@ -4,7 +4,6 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { OrderItem } from '../types';
 import { supabase } from '../lib/supabase';
-import { DeliveryPointSelector } from './DeliveryPointSelector';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -25,7 +24,6 @@ export function CheckoutModal({
   const { state: authState } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isDeliveryPointSelectorOpen, setIsDeliveryPointSelectorOpen] = useState(false);
   
   const orderTotal = finalTotal || state.total;
   
@@ -33,7 +31,11 @@ export function CheckoutModal({
     customer_name: authState.user?.first_name || '',
     customer_phone: '',
     customer_email: '',
-    delivery_address: '',
+    delivery_city: '',
+    delivery_postal_code: '',
+    delivery_street: '',
+    delivery_house: '',
+    delivery_apartment: '',
     delivery_method: 'boxberry' as 'boxberry' | 'russian_post' | 'cdek',
     payment_method: 'bank_transfer' as 'bank_transfer'
   });
@@ -90,7 +92,12 @@ export function CheckoutModal({
           user_id: authState.user.telegram_id,
           items: orderItems,
           total_amount: orderTotal,
-          ...formData
+          customer_name: formData.customer_name,
+          customer_phone: formData.customer_phone,
+          customer_email: formData.customer_email,
+          delivery_address: `${formData.delivery_city}, ${formData.delivery_postal_code}, ${formData.delivery_street}, д. ${formData.delivery_house}${formData.delivery_apartment ? `, кв. ${formData.delivery_apartment}` : ''}`,
+          delivery_method: formData.delivery_method,
+          payment_method: formData.payment_method
         })
         .select()
         .single();
@@ -148,7 +155,7 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
 
 🚚 *Доставка:*
 • Способ: ${getDeliveryMethodName(customerData.delivery_method)}
-• Адрес: ${customerData.delivery_address}
+• Адрес: ${customerData.delivery_city}, ${customerData.delivery_postal_code}, ${customerData.delivery_street}, д. ${customerData.delivery_house}${customerData.delivery_apartment ? `, кв. ${customerData.delivery_apartment}` : ''}
 
 💳 *Оплата:* Банковский перевод
 
@@ -193,23 +200,6 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const handleDeliveryMethodChange = (method: string) => {
-    handleInputChange('delivery_method', method);
-    // Очищаем адрес при смене способа доставки
-    handleInputChange('delivery_address', '');
-  };
-
-  const handleSelectDeliveryPoint = (point: any) => {
-    handleInputChange('delivery_address', `${point.name}, ${point.address}`);
-    setIsDeliveryPointSelectorOpen(false);
-  };
-
-  const openDeliveryPointSelector = () => {
-    if (formData.delivery_method) {
-      setIsDeliveryPointSelectorOpen(true);
     }
   };
 
@@ -274,7 +264,7 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-gray-900">
-                      {(item.product.real_price * item.quantity).toFixed(2)} руб.
+                      <p className="font-medium text-gray-900">{order.delivery_address}</p>
                     </p>
                   </div>
                 </div>
@@ -372,7 +362,6 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
                   { value: 'boxberry', label: 'Boxberry', desc: 'Пункты выдачи' },
                   { value: 'russian_post', label: 'Почта России', desc: 'Доставка на дом' },
                   { value: 'cdek', label: 'СДЭК', desc: 'Пункты выдачи' },
-                  { value: 'yandex_market', label: 'Яндекс.Маркет', desc: 'Пункты выдачи' }
                 ].map((method) => (
                   <label
                     key={method.value}
@@ -387,7 +376,7 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
                       name="delivery_method"
                       value={method.value}
                       checked={formData.delivery_method === method.value}
-                      onChange={(e) => handleDeliveryMethodChange(e.target.value)}
+                      onChange={(e) => handleInputChange('delivery_method', e.target.value)}
                       className="sr-only"
                     />
                     <div>
@@ -400,42 +389,95 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Пункт выдачи *
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Адрес доставки *
               </label>
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={openDeliveryPointSelector}
-                  disabled={!formData.delivery_method}
-                  className={`w-full px-3 py-3 border rounded-lg text-left transition-colors ${
-                    formData.delivery_address
-                      ? 'border-gray-300 bg-white'
-                      : 'border-gray-300 bg-gray-50'
-                  } ${
-                    !formData.delivery_method
-                      ? 'cursor-not-allowed opacity-50'
-                      : 'hover:border-black cursor-pointer'
-                  } ${
-                    errors.delivery_address ? 'border-red-500' : ''
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <span className={formData.delivery_address ? 'text-gray-900' : 'text-gray-500'}>
-                      {formData.delivery_address || 'Выберите пункт выдачи на карте'}
-                    </span>
-                  </div>
-                </button>
-                {!formData.delivery_method && (
-                  <p className="text-xs text-gray-500">
-                    Сначала выберите способ доставки
-                  </p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Город *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.delivery_city}
+                    onChange={(e) => handleInputChange('delivery_city', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
+                      errors.delivery_city ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Москва"
+                  />
+                  {errors.delivery_city && (
+                    <p className="text-red-500 text-sm mt-1">{errors.delivery_city}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Индекс *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.delivery_postal_code}
+                    onChange={(e) => handleInputChange('delivery_postal_code', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
+                      errors.delivery_postal_code ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="123456"
+                  />
+                  {errors.delivery_postal_code && (
+                    <p className="text-red-500 text-sm mt-1">{errors.delivery_postal_code}</p>
+                  )}
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Улица *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.delivery_street}
+                    onChange={(e) => handleInputChange('delivery_street', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
+                      errors.delivery_street ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="ул. Ленина"
+                  />
+                  {errors.delivery_street && (
+                    <p className="text-red-500 text-sm mt-1">{errors.delivery_street}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Дом *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.delivery_house}
+                    onChange={(e) => handleInputChange('delivery_house', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
+                      errors.delivery_house ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="15"
+                  />
+                  {errors.delivery_house && (
+                    <p className="text-red-500 text-sm mt-1">{errors.delivery_house}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Квартира/Офис
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.delivery_apartment}
+                    onChange={(e) => handleInputChange('delivery_apartment', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    placeholder="25"
+                  />
+                </div>
               </div>
-              {errors.delivery_address && (
-                <p className="text-red-500 text-sm mt-1">{errors.delivery_address}</p>
-              )}
             </div>
           </div>
 
@@ -487,13 +529,6 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
         </form>
       </div>
 
-      {/* Delivery Point Selector */}
-      <DeliveryPointSelector
-        deliveryMethod={formData.delivery_method as any}
-        isOpen={isDeliveryPointSelectorOpen}
-        onClose={() => setIsDeliveryPointSelectorOpen(false)}
-        onSelectPoint={handleSelectDeliveryPoint}
-      />
     </div>
   );
 }
