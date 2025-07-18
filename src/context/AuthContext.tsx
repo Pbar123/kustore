@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { TelegramUser } from '../types/telegram';
-import { supabase } from '../lib/supabase';
+import { authenticateWithTelegram } from '../api/auth';
 
 interface User {
   id: string;
@@ -82,78 +82,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      console.log('Starting login process...');
-      console.log('Window.Telegram:', window.Telegram);
-      console.log('WebApp available:', !!window.Telegram?.WebApp);
 
       // Проверяем, доступен ли Telegram Web App
       if (!window.Telegram?.WebApp) {
-        console.warn('Telegram Web App not available, creating mock user for testing');
         // Для тестирования в браузере создаем тестового пользователя
         const mockUser = {
-          id: Date.now(), // Уникальный ID
+          id: 999999999, // Фиксированный тестовый ID
           first_name: 'Test',
           last_name: 'User',
-          username: 'testuser_' + Date.now()
+          username: 'testuser'
         };
         
-        console.log('Using mock user:', mockUser);
-        
-        // Создаем или обновляем пользователя в базе данных
-        let { data: existingUser, error: fetchError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('telegram_id', mockUser.id)
-          .single();
-
-        if (fetchError && fetchError.code !== 'PGRST116') {
-          console.error('Error fetching existing user:', fetchError);
-          throw fetchError;
-        }
-
-        let user;
-        if (existingUser) {
-          console.log('Updating existing user');
-          const { data: updatedUser, error: updateError } = await supabase
-            .from('users')
-            .update({ 
-              last_login: new Date().toISOString(),
-              first_name: mockUser.first_name,
-              last_name: mockUser.last_name,
-              username: mockUser.username,
-            })
-            .eq('telegram_id', mockUser.id)
-            .select()
-            .single();
-
-          if (updateError) {
-            console.error('Error updating user:', updateError);
-            throw updateError;
-          }
-          user = updatedUser;
-        } else {
-          console.log('Creating new user');
-          const { data: newUser, error: insertError } = await supabase
-            .from('users')
-            .insert({
-              id: mockUser.id,
-              telegram_id: mockUser.id,
-              first_name: mockUser.first_name,
-              last_name: mockUser.last_name,
-              username: mockUser.username,
-              last_login: new Date().toISOString(),
-            })
-            .select()
-            .single();
-
-          if (insertError) {
-            console.error('Error creating user:', insertError);
-            throw insertError;
-          }
-          user = newUser;
-        }
-
-        console.log('User authenticated successfully:', user);
+        const user = await authenticateWithTelegram(mockUser);
         dispatch({ 
           type: 'SET_USER', 
           payload: { user, telegramUser: mockUser } 
@@ -163,10 +103,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const tg = window.Telegram.WebApp;
       
-      console.log('Telegram WebApp object:', tg);
-      console.log('InitData:', tg.initData);
-      console.log('InitDataUnsafe:', tg.initDataUnsafe);
-      
       // Инициализируем Telegram Web App
       tg.ready();
       tg.expand();
@@ -174,71 +110,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Получаем данные пользователя из Telegram
       const telegramUser = tg.initDataUnsafe.user;
       
-      console.log('Telegram user from initDataUnsafe:', telegramUser);
-      
       if (!telegramUser) {
-        // Пробуем альтернативный способ получения данных
-        console.log('No user in initDataUnsafe, trying alternative methods...');
-        
         // Если данных нет, создаем тестового пользователя
         const mockUser = {
-          id: Date.now(), // Уникальный ID на основе времени
+          id: 999999999, // Фиксированный тестовый ID
           first_name: 'Telegram',
           last_name: 'User',
           username: 'telegram_user'
         };
         
-        console.log('Using mock user:', mockUser);
-        
-        // Проверяем, существует ли пользователь
-        let { data: existingUser, error: fetchError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('telegram_id', mockUser.id)
-          .single();
-
-        let user;
-        if (existingUser) {
-          // Обновляем существующего пользователя
-          const { data: updatedUser, error: updateError } = await supabase
-            .from('users')
-            .update({ 
-              last_login: new Date().toISOString(),
-              first_name: mockUser.first_name,
-              last_name: mockUser.last_name,
-              username: mockUser.username,
-            })
-            .eq('telegram_id', mockUser.id)
-            .select()
-            .single();
-
-          if (updateError) {
-            console.error('Error updating user:', updateError);
-            throw updateError;
-          }
-          user = updatedUser;
-        } else {
-          // Создаем нового пользователя
-          const { data: newUser, error: insertError } = await supabase
-            .from('users')
-            .insert({
-              id: mockUser.id,
-              telegram_id: mockUser.id,
-              first_name: mockUser.first_name,
-              last_name: mockUser.last_name,
-              username: mockUser.username,
-              last_login: new Date().toISOString(),
-            })
-            .select()
-            .single();
-
-          if (insertError) {
-            console.error('Error creating user:', insertError);
-            throw insertError;
-          }
-          user = newUser;
-        }
-        
+        const user = await authenticateWithTelegram(mockUser);
         dispatch({ 
           type: 'SET_USER',
           payload: { user, telegramUser: mockUser }
@@ -246,55 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      console.log('Telegram user data:', telegramUser);
-
-      // Проверяем, существует ли пользователь в базе данных
-      let { data: existingUser, error: fetchError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('telegram_id', telegramUser.id)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
-
-      let user: User;
-
-      if (existingUser) {
-        // Обновляем время последнего входа
-        const { data: updatedUser, error: updateError } = await supabase
-          .from('users')
-          .update({ 
-            last_login: new Date().toISOString(),
-            first_name: telegramUser.first_name,
-            last_name: telegramUser.last_name || null,
-            username: telegramUser.username || null,
-          })
-          .eq('telegram_id', telegramUser.id)
-          .select()
-          .single();
-
-        if (updateError) throw updateError;
-        user = updatedUser;
-      } else {
-        // Создаем нового пользователя
-        const { data: newUser, error: insertError } = await supabase
-          .from('users')
-          .insert({
-            id: telegramUser.id,
-            telegram_id: telegramUser.id,
-            first_name: telegramUser.first_name,
-            last_name: telegramUser.last_name || null,
-            username: telegramUser.username || null,
-            last_login: new Date().toISOString(),
-          })
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-        user = newUser;
-      }
+      const user = await authenticateWithTelegram(telegramUser);
 
       dispatch({ 
         type: 'SET_USER', 

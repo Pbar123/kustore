@@ -55,14 +55,11 @@ export function useFavorites() {
 
   const addToFavorites = async (productId: string) => {
     if (!authState.isAuthenticated || !authState.user) {
-      console.log('User not authenticated, cannot add to favorites');
       setError('Необходимо войти в систему');
       return false;
     }
 
     try {
-      console.log('Adding to favorites:', { userId: authState.user.telegram_id, productId });
-      
       const { error } = await supabase
         .from('user_favorites')
         .insert({
@@ -71,11 +68,14 @@ export function useFavorites() {
         });
 
       if (error) {
-        console.error('Error adding to favorites:', error);
+        // Если это ошибка дублирования, просто игнорируем
+        if (error.code === '23505') {
+          setError('Товар уже в избранном');
+          return false;
+        }
         throw error;
       }
 
-      console.log('Successfully added to favorites');
 
       // Обновляем локальное состояние
       setFavoriteIds(prev => new Set([...prev, productId]));
@@ -88,12 +88,6 @@ export function useFavorites() {
       console.error('Error adding to favorites:', err);
       const errorMessage = err instanceof Error ? err.message : 'Ошибка при добавлении в избранное';
       setError(errorMessage);
-      
-      // Показываем пользователю более понятное сообщение
-      if (errorMessage.includes('duplicate key')) {
-        setError('Товар уже добавлен в избранное');
-      }
-      
       return false;
     }
   };

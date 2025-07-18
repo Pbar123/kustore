@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag } from 'lucide-react';
 import { useFavorites } from '../hooks/useFavorites';
 import { useAuth } from '../context/AuthContext';
