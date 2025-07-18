@@ -10,7 +10,7 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID;
 
 // Инициализация
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+const bot = new TelegramBot(BOT_TOKEN);
 
 // Проверяем переменные окружения
 if (!BOT_TOKEN || !SUPABASE_URL || !SUPABASE_SERVICE_KEY || !ADMIN_CHAT_ID) {
@@ -55,6 +55,11 @@ async function validateBotToken() {
     
     console.log('✅ Токен бота валиден!');
     console.log(`🤖 Бот: ${data.result.first_name} (@${data.result.username})`);
+    
+    // Запускаем polling только после успешной валидации токена
+    bot.startPolling();
+    console.log('🚀 Бот запущен и готов к работе!');
+    
     return true;
   } catch (error) {
     console.error('❌ Ошибка при проверке токена:', error.message);
@@ -67,12 +72,9 @@ async function validateBotToken() {
 
 // Валидируем токен перед запуском
 validateBotToken().then(() => {
-  // Инициализация бота только после успешной валидации
-  initializeBot();
+  // Инициализация завершена в validateBotToken
 });
 
-function initializeBot() {
-}
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // Хранилище состояний пользователей
