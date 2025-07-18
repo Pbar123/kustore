@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Ruler } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { FavoriteButton } from './FavoriteButton';
@@ -17,6 +17,7 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   // Получаем рекомендации - сначала из той же категории, потом из других категорий
   const recommendations = React.useMemo(() => {

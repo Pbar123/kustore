@@ -28,7 +28,8 @@ const ADD_PRODUCT_STATES = {
   WAITING_DESCRIPTION: 'waiting_description',
   WAITING_SIZES: 'waiting_sizes',
   WAITING_STOCK: 'waiting_stock',
-  WAITING_MEASUREMENTS: 'waiting_measurements',
+  WAITING_MEASUREMENTS_SIZE: 'waiting_measurements_size',
+  WAITING_MEASUREMENTS_VALUES: 'waiting_measurements_values',
   WAITING_IMAGES: 'waiting_images',
   WAITING_FEATURES: 'waiting_features',
   WAITING_IS_NEW: 'waiting_is_new',
@@ -59,21 +60,27 @@ const PROMO_CODE_STATES = {
 
 // Категории товаров
 const CATEGORIES = [
-  'shirts', 'jeans', 'dresses', 'sweaters', 
-  'jackets', 'skirts', 'bags', 'shoes', 'accessories'
+  'футболки', 'толстовки', 'штаны', 'шорты', 'аксессуары', 'обувь'
 ];
 
 // Размеры по категориям
 const SIZES_BY_CATEGORY = {
-  'shirts': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-  'jeans': ['26', '27', '28', '29', '30', '31', '32', '33', '34', '36', '38'],
-  'dresses': ['XS', 'S', 'M', 'L', 'XL'],
-  'sweaters': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-  'jackets': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-  'skirts': ['XS', 'S', 'M', 'L', 'XL'],
-  'bags': ['One Size'],
-  'shoes': ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44'],
-  'accessories': ['One Size']
+  'футболки': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+  'толстовки': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+  'штаны': ['26', '27', '28', '29', '30', '31', '32', '33', '34', '36', '38'],
+  'шорты': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+  'аксессуары': ['One Size'],
+  'обувь': ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44']
+};
+
+// Замеры по категориям (какие замеры нужны)
+const MEASUREMENTS_BY_CATEGORY = {
+  'футболки': ['A', 'B', 'C'], // A-ширина, B-длина, C-рукав
+  'толстовки': ['A', 'B', 'C', 'D'], // A-ширина, B-длина, C-рукав, D-капюшон
+  'штаны': ['A', 'B', 'C', 'D'], // A-талия, B-длина, C-бедра, D-длина по внутреннему шву
+  'шорты': ['A', 'B', 'C'], // A-талия, B-длина, C-бедра
+  'аксессуары': [], // Без замеров
+  'обувь': ['A', 'B'] // A-длина стопы, B-ширина стопы
 };
 
 // Проверка администратора
@@ -376,6 +383,57 @@ async function handleAddProductState(chatId, text, userState) {
           `📦 Введите количество на складе для размера ${product.sizes[userState.stockIndex]}:`
         );
       } else {
+        // Проверяем, нужны ли замеры для этой категории
+        const needsMeasurements = MEASUREMENTS_BY_CATEGORY[product.category] && 
+                                 MEASUREMENTS_BY_CATEGORY[product.category].length > 0;
+        
+        if (needsMeasurements) {
+          userState.state = ADD_PRODUCT_STATES.WAITING_MEASUREMENTS_SIZE;
+          userState.measurementIndex = 0;
+          userState.measurements = {};
+          bot.sendMessage(chatId, 
+            `📏 Теперь добавим замеры для размера ${product.sizes[0]}\n\n` +
+            `Нужные замеры для категории "${product.category}": ${MEASUREMENTS_BY_CATEGORY[product.category].join(', ')}\n\n` +
+            `Введите замер A в сантиметрах (например: 52.5):`
+          );
+        } else {
+          userState.state = ADD_PRODUCT_STATES.WAITING_IMAGES;
+          bot.sendMessage(chatId, 
+            '🖼️ Введите пути к изображениям через запятую\n' +
+            'Пример: /images/products/shirts/shirt1.jpg, /images/products/shirts/shirt2.jpg'
+          );
+        }
+      }
+      break;
+      
+    case ADD_PRODUCT_STATES.WAITING_MEASUREMENTS_SIZE:
+      const measurementValue = parseFloat(text);
+      if (isNaN(measurementValue) || measurementValue <= 0) {
+        bot.sendMessage(chatId, '❌ Введите корректное значение замера (число больше 0):');
+        return;
+      }
+      
+      const currentSize = product.sizes[Math.floor(userState.measurementIndex / MEASUREMENTS_BY_CATEGORY[product.category].length)];
+      const currentMeasurement = MEASUREMENTS_BY_CATEGORY[product.category][userState.measurementIndex % MEASUREMENTS_BY_CATEGORY[product.category].length];
+      
+      if (!userState.measurements[currentSize]) {
+        userState.measurements[currentSize] = {};
+      }
+      userState.measurements[currentSize][currentMeasurement] = measurementValue;
+      
+      userState.measurementIndex++;
+      
+      const totalMeasurements = product.sizes.length * MEASUREMENTS_BY_CATEGORY[product.category].length;
+      
+      if (userState.measurementIndex < totalMeasurements) {
+        const nextSize = product.sizes[Math.floor(userState.measurementIndex / MEASUREMENTS_BY_CATEGORY[product.category].length)];
+        const nextMeasurement = MEASUREMENTS_BY_CATEGORY[product.category][userState.measurementIndex % MEASUREMENTS_BY_CATEGORY[product.category].length];
+        
+        bot.sendMessage(chatId, 
+          `📏 Замер для размера ${nextSize}\n` +
+          `Введите замер ${nextMeasurement} в сантиметрах:`
+        );
+      } else {
         userState.state = ADD_PRODUCT_STATES.WAITING_IMAGES;
         bot.sendMessage(chatId, 
           '🖼️ Введите пути к изображениям через запятую\n' +
@@ -465,6 +523,7 @@ ${product.features && product.features.length > 0 ? `✨ *Особенности
 // Сохранить товар в базу данных
 async function saveProduct(chatId, product) {
   try {
+    // Сначала сохраняем товар
     const { data, error } = await supabase
       .from('products')
       .insert([product])
@@ -472,10 +531,40 @@ async function saveProduct(chatId, product) {
     
     if (error) throw error;
     
+    const savedProduct = data[0];
+    
+    // Затем сохраняем замеры, если они есть
+    if (userStates.get(chatId)?.measurements) {
+      const measurements = userStates.get(chatId).measurements;
+      const measurementRecords = [];
+      
+      for (const [size, values] of Object.entries(measurements)) {
+        measurementRecords.push({
+          product_id: savedProduct.id,
+          size: size,
+          measurement_a: values.A || null,
+          measurement_b: values.B || null,
+          measurement_c: values.C || null,
+          measurement_d: values.D || null
+        });
+      }
+      
+      if (measurementRecords.length > 0) {
+        const { error: measurementError } = await supabase
+          .from('measurements')
+          .insert(measurementRecords);
+        
+        if (measurementError) {
+          console.error('Error saving measurements:', measurementError);
+          // Не прерываем процесс, просто логируем ошибку
+        }
+      }
+    }
+    
     userStates.delete(chatId);
     bot.sendMessage(chatId, 
-      `✅ *Товар успешно добавлен!*\n\n` +
-      `🆔 ID: ${data[0].id}\n` +
+      `✅ *Товар успешно добавлен${userStates.get(chatId)?.measurements ? ' с замерами' : ''}!*\n\n` +
+      `🆔 ID: ${savedProduct.id}\n` +
       `📝 Название: ${product.name}`, 
       { ...getMainMenu(), parse_mode: 'Markdown' }
     );
