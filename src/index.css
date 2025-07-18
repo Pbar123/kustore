@@ -74,3 +74,25 @@
 .dual-range-slider .range-min:focus {
   z-index: 3;
 }
+
+/* Navigation animations */
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.05); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Touch feedback for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .nav-item:active {
+    animation: bounce-gentle 0.3s ease-in-out;
+  }
+  
+  .nav-item:active .nav-icon {
+    animation: pulse-soft 0.2s ease-in-out;
+  }
+}

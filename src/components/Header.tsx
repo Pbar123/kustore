@@ -7,6 +7,7 @@ import { CartSidebar } from './CartSidebar';
 export function Header() {
   const { state } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -42,14 +43,28 @@ export function Header() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center justify-center flex-1 py-3 transition-colors ${
+                onMouseEnter={() => setHoveredItem(item.path)}
+                onMouseLeave={() => setHoveredItem(null)}
+                className={`nav-item flex flex-col items-center justify-center flex-1 py-3 transition-all duration-200 ${
                   item.isActive 
                     ? 'text-black' 
                     : 'text-gray-500'
+                } ${
+                  hoveredItem === item.path ? 'transform scale-105' : ''
                 }`}
               >
-                <IconComponent className={`h-6 w-6 mb-2 ${item.isActive ? 'text-black' : 'text-gray-500'}`} />
-                <span className={`text-sm font-medium ${item.isActive ? 'text-black' : 'text-gray-500'}`}>
+                <IconComponent className={`nav-icon h-6 w-6 mb-2 transition-all duration-200 ${
+                  item.isActive ? 'text-black' : 'text-gray-500'
+                } ${
+                  hoveredItem === item.path || item.isActive 
+                    ? 'transform scale-110 -translate-y-0.5' 
+                    : ''
+                }`} />
+                <span className={`text-sm font-medium transition-all duration-200 ${
+                  item.isActive ? 'text-black' : 'text-gray-500'
+                } ${
+                  hoveredItem === item.path ? 'transform scale-105' : ''
+                }`}>
                   {item.label}
                 </span>
               </Link>
