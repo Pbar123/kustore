@@ -35,7 +35,46 @@ if (!BOT_TOKEN.match(/^\d+:[A-Za-z0-9_-]{35}$/)) {
   process.exit(1);
 }
 
+// Проверяем валидность токена перед инициализацией бота
+async function validateBotToken() {
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMe`);
+    const data = await response.json();
+    
+    if (!data.ok) {
+      console.error('❌ Токен бота недействителен!');
+      console.error('Ошибка:', data.description);
+      console.error('\n📝 Как исправить:');
+      console.error('1. Перейдите к @BotFather в Telegram');
+      console.error('2. Отправьте команду /mybots');
+      console.error('3. Выберите вашего бота');
+      console.error('4. Нажмите "API Token"');
+      console.error('5. Скопируйте новый токен в файл .env');
+      process.exit(1);
+    }
+    
+    console.log('✅ Токен бота валиден!');
+    console.log(`🤖 Бот: ${data.result.first_name} (@${data.result.username})`);
+    return true;
+  } catch (error) {
+    console.error('❌ Ошибка при проверке токена:', error.message);
+    console.error('\n📝 Проверьте:');
+    console.error('1. Интернет соединение');
+    console.error('2. Правильность токена в .env файле');
+    process.exit(1);
+  }
+}
+
+// Валидируем токен перед запуском
+validateBotToken().then(() => {
+  // Инициализация бота только после успешной валидации
+  initializeBot();
+});
+
+function initializeBot() {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+}
 
 // Хранилище состояний пользователей
 const userStates = new Map();
