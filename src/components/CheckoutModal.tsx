@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { OrderItem } from '../types';
 import { supabase } from '../lib/supabase';
+import { DeliveryPointSelector } from './DeliveryPointSelector';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export function CheckoutModal({
   const { state: authState } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isDeliveryPointSelectorOpen, setIsDeliveryPointSelectorOpen] = useState(false);
   
   const orderTotal = finalTotal || state.total;
   
@@ -182,6 +184,7 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
       case 'boxberry': return 'Boxberry';
       case 'russian_post': return 'Почта России';
       case 'cdek': return 'СДЭК';
+      case 'yandex_market': return 'Яндекс.Маркет';
       default: return method;
     }
   };
@@ -190,6 +193,23 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleDeliveryMethodChange = (method: string) => {
+    handleInputChange('delivery_method', method);
+    // Очищаем адрес при смене способа доставки
+    handleInputChange('delivery_address', '');
+  };
+
+  const handleSelectDeliveryPoint = (point: any) => {
+    handleInputChange('delivery_address', `${point.name}, ${point.address}`);
+    setIsDeliveryPointSelectorOpen(false);
+  };
+
+  const openDeliveryPointSelector = () => {
+    if (formData.delivery_method) {
+      setIsDeliveryPointSelectorOpen(true);
     }
   };
 
@@ -351,7 +371,8 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
                 {[
                   { value: 'boxberry', label: 'Boxberry', desc: 'Пункты выдачи' },
                   { value: 'russian_post', label: 'Почта России', desc: 'Доставка на дом' },
-                  { value: 'cdek', label: 'СДЭК', desc: 'Быстрая доставка' }
+                  { value: 'cdek', label: 'СДЭК', desc: 'Пункты выдачи' },
+                  { value: 'yandex_market', label: 'Яндекс.Маркет', desc: 'Пункты выдачи' }
                 ].map((method) => (
                   <label
                     key={method.value}
@@ -366,7 +387,7 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
                       name="delivery_method"
                       value={method.value}
                       checked={formData.delivery_method === method.value}
-                      onChange={(e) => handleInputChange('delivery_method', e.target.value)}
+                      onChange={(e) => handleDeliveryMethodChange(e.target.value)}
                       className="sr-only"
                     />
                     <div>
@@ -380,17 +401,38 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Адрес доставки *
+                Пункт выдачи *
               </label>
-              <textarea
-                value={formData.delivery_address}
-                onChange={(e) => handleInputChange('delivery_address', e.target.value)}
-                rows={3}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
-                  errors.delivery_address ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Укажите полный адрес доставки или адрес пункта выдачи"
-              />
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={openDeliveryPointSelector}
+                  disabled={!formData.delivery_method}
+                  className={`w-full px-3 py-3 border rounded-lg text-left transition-colors ${
+                    formData.delivery_address
+                      ? 'border-gray-300 bg-white'
+                      : 'border-gray-300 bg-gray-50'
+                  } ${
+                    !formData.delivery_method
+                      ? 'cursor-not-allowed opacity-50'
+                      : 'hover:border-black cursor-pointer'
+                  } ${
+                    errors.delivery_address ? 'border-red-500' : ''
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <span className={formData.delivery_address ? 'text-gray-900' : 'text-gray-500'}>
+                      {formData.delivery_address || 'Выберите пункт выдачи на карте'}
+                    </span>
+                  </div>
+                </button>
+                {!formData.delivery_method && (
+                  <p className="text-xs text-gray-500">
+                    Сначала выберите способ доставки
+                  </p>
+                )}
+              </div>
               {errors.delivery_address && (
                 <p className="text-red-500 text-sm mt-1">{errors.delivery_address}</p>
               )}
@@ -444,6 +486,14 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
           </div>
         </form>
       </div>
+
+      {/* Delivery Point Selector */}
+      <DeliveryPointSelector
+        deliveryMethod={formData.delivery_method as any}
+        isOpen={isDeliveryPointSelectorOpen}
+        onClose={() => setIsDeliveryPointSelectorOpen(false)}
+        onSelectPoint={handleSelectDeliveryPoint}
+      />
     </div>
   );
 }
