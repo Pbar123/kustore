@@ -8,34 +8,19 @@ import { supabase } from '../lib/supabase';
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
-  appliedPromoCode?: string;
-  promoDiscount?: number;
-  finalTotal?: number;
 }
 
-export function CheckoutModal({ 
-  isOpen, 
-  onClose, 
-  appliedPromoCode = '', 
-  promoDiscount = 0,
-  finalTotal 
-}: CheckoutModalProps) {
+export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const { state, dispatch } = useCart();
   const { state: authState } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   
-  const orderTotal = finalTotal || state.total;
-  
   const [formData, setFormData] = useState({
     customer_name: authState.user?.first_name || '',
     customer_phone: '',
     customer_email: '',
-    delivery_city: '',
-    delivery_postal_code: '',
-    delivery_street: '',
-    delivery_house: '',
-    delivery_apartment: '',
+    delivery_address: '',
     delivery_method: 'boxberry' as 'boxberry' | 'russian_post' | 'cdek',
     payment_method: 'bank_transfer' as 'bank_transfer'
   });
@@ -57,22 +42,8 @@ export function CheckoutModal({
       newErrors.customer_phone = 'Введите корректный номер телефона';
     }
     
-    if (!formData.delivery_city.trim()) {
-      newErrors.delivery_city = 'Город обязателен для заполнения';
-    }
-    
-    if (!formData.delivery_postal_code.trim()) {
-      newErrors.delivery_postal_code = 'Индекс обязателен для заполнения';
-    } else if (!/^\d{6}$/.test(formData.delivery_postal_code)) {
-      newErrors.delivery_postal_code = 'Индекс должен содержать 6 цифр';
-    }
-    
-    if (!formData.delivery_street.trim()) {
-      newErrors.delivery_street = 'Улица обязательна для заполнения';
-    }
-    
-    if (!formData.delivery_house.trim()) {
-      newErrors.delivery_house = 'Номер дома обязателен для заполнения';
+    if (!formData.delivery_address.trim()) {
+      newErrors.delivery_address = 'Адрес доставки обязателен для заполнения';
     }
     
     setErrors(newErrors);
@@ -83,10 +54,7 @@ export function CheckoutModal({
     e.preventDefault();
     
     if (!validateForm()) return;
-    if (!authState.user) {
-      alert('Необходимо войти в систему для оформления заказа');
-      return;
-    }
+    if (!authState.user) return;
     
     setIsSubmitting(true);
     
@@ -98,41 +66,28 @@ export function CheckoutModal({
         product_image: item.product.image_url,
         size: item.size,
         quantity: item.quantity,
-        price: Number(item.product.real_price),
-        total: Number(item.product.real_price * item.quantity)
+        price: item.product.real_price,
+        total: item.product.real_price * item.quantity
       }));
-
 
       // Создаем заказ в базе данных
       const { data: order, error } = await supabase
         .from('orders')
         .insert({
-          user_id: authState.user?.telegram_id || null,
+          user_id: authState.user.telegram_id,
           items: orderItems,
-          total_amount: Number(orderTotal),
-          customer_name: formData.customer_name,
-          customer_phone: formData.customer_phone,
-          customer_email: formData.customer_email,
-          delivery_address: `${formData.delivery_city}, ${formData.delivery_postal_code}, ${formData.delivery_street}, д. ${formData.delivery_house}${formData.delivery_apartment ? `, кв. ${formData.delivery_apartment}` : ''}`,
-          delivery_method: formData.delivery_method,
-          payment_method: formData.payment_method
+          total_amount: state.total,
+          ...formData
         })
         .select()
         .single();
 
       if (error) {
-        console.error('Ошибка создания заказа:', error);
         throw error;
       }
 
-
       // Отправляем уведомление в Telegram
-      try {
-        await sendTelegramNotification(order.id, orderItems, formData, orderTotal, appliedPromoCode, promoDiscount);
-      } catch (telegramError) {
-        console.warn('Не удалось отправить уведомление в Telegram:', telegramError);
-        // Не прерываем процесс, если уведомление не отправилось
-      }
+      await sendTelegramNotification(order.id, orderItems, formData, state.total);
 
       // Очищаем корзину
       dispatch({ type: 'CLEAR_CART' });
@@ -140,35 +95,21 @@ export function CheckoutModal({
       setIsSuccess(true);
     } catch (error) {
       console.error('Ошибка при создании заказа:', error);
-      
-      let errorMessage = 'Произошла ошибка при оформлении заказа.';
-      if (error instanceof Error) {
-        if (error.message.includes('duplicate key')) {
-          errorMessage = 'Заказ уже существует. Попробуйте обновить страницу.';
-        } else if (error.message.includes('foreign key')) {
-          errorMessage = 'Ошибка данных пользователя. Попробуйте войти заново.';
-        } else {
-          errorMessage = `Ошибка: ${error.message}`;
-        }
-      }
-      
-      alert(errorMessage);
+      alert('Произошла ошибка при оформлении заказа. Попробуйте еще раз.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const sendTelegramNotification = async (
-    orderId: string, 
-    items: OrderItem[], 
-    customerData: typeof formData, 
-    total: number,
-    promoCode?: string,
-    discount?: number
+    orderId: string,
+    items: OrderItem[],
+    customerData: typeof formData,
+    total: number
   ) => {
     try {
       // Формируем сообщение для Telegram
-      let message = `
+      const message = `
 🛍️ *НОВЫЙ ЗАКАЗ #${orderId.slice(-8)}*
 
 👤 *Клиент:*
@@ -178,23 +119,12 @@ ${customerData.customer_email ? `• Email: ${customerData.customer_email}` : ''
 
 📦 *Товары:*
 ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} = ${item.total} руб.`).join('\n')}
-`;
 
-      if (promoCode && discount && discount > 0) {
-        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-        message += `\n💰 *Стоимость:*\n`;
-        message += `• Сумма товаров: ${subtotal} руб.\n`;
-        message += `• Промокод: ${promoCode} (-${discount} руб.)\n`;
-        message += `• К оплате: ${total} руб.\n`;
-      } else {
-        message += `\n💰 *Итого: ${total} руб.*\n`;
-      }
-
-      message += `
+💰 *Итого: ${total} руб.*
 
 🚚 *Доставка:*
 • Способ: ${getDeliveryMethodName(customerData.delivery_method)}
-• Адрес: ${customerData.delivery_city}, ${customerData.delivery_postal_code}, ${customerData.delivery_street}, д. ${customerData.delivery_house}${customerData.delivery_apartment ? `, кв. ${customerData.delivery_apartment}` : ''}
+• Адрес: ${customerData.delivery_address}
 
 💳 *Оплата:* Банковский перевод
 
@@ -230,7 +160,6 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
       case 'boxberry': return 'Boxberry';
       case 'russian_post': return 'Почта России';
       case 'cdek': return 'СДЭК';
-      case 'yandex_market': return 'Яндекс.Маркет';
       default: return method;
     }
   };
@@ -311,19 +240,7 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
             </div>
             <div className="flex justify-between items-center text-lg font-bold border-t pt-3">
               <span>Итого:</span>
-              <div className="text-right">
-                {promoDiscount > 0 && (
-                  <>
-                    <div className="text-sm text-gray-500 line-through font-normal">
-                      {state.total.toFixed(2)} руб.
-                    </div>
-                    <div className="text-xs text-green-600 font-normal">
-                      Промокод {appliedPromoCode}: -{promoDiscount.toFixed(2)} руб.
-                    </div>
-                  </>
-                )}
-                <span>{orderTotal.toFixed(2)} руб.</span>
-              </div>
+              <span>{state.total.toFixed(2)} руб.</span>
             </div>
           </div>
 
@@ -431,92 +348,18 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Адрес доставки *
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Город *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.delivery_city}
-                    onChange={(e) => handleInputChange('delivery_city', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
-                      errors.delivery_city ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="Москва"
-                  />
-                  {errors.delivery_city && (
-                    <p className="text-red-500 text-sm mt-1">{errors.delivery_city}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Индекс *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.delivery_postal_code}
-                    onChange={(e) => handleInputChange('delivery_postal_code', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
-                      errors.delivery_postal_code ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="123456"
-                  />
-                  {errors.delivery_postal_code && (
-                    <p className="text-red-500 text-sm mt-1">{errors.delivery_postal_code}</p>
-                  )}
-                </div>
-                
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Улица *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.delivery_street}
-                    onChange={(e) => handleInputChange('delivery_street', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
-                      errors.delivery_street ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="ул. Ленина"
-                  />
-                  {errors.delivery_street && (
-                    <p className="text-red-500 text-sm mt-1">{errors.delivery_street}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Дом *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.delivery_house}
-                    onChange={(e) => handleInputChange('delivery_house', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
-                      errors.delivery_house ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="15"
-                  />
-                  {errors.delivery_house && (
-                    <p className="text-red-500 text-sm mt-1">{errors.delivery_house}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Квартира/Офис
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.delivery_apartment}
-                    onChange={(e) => handleInputChange('delivery_apartment', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                    placeholder="25"
-                  />
-                </div>
-              </div>
+              <textarea
+                value={formData.delivery_address}
+                onChange={(e) => handleInputChange('delivery_address', e.target.value)}
+                rows={3}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
+                  errors.delivery_address ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Укажите полный адрес доставки или адрес пункта выдачи"
+              />
+              {errors.delivery_address && (
+                <p className="text-red-500 text-sm mt-1">{errors.delivery_address}</p>
+              )}
             </div>
           </div>
 
@@ -567,7 +410,6 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
           </div>
         </form>
       </div>
-
     </div>
   );
 }

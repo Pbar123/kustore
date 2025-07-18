@@ -159,9 +159,6 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       <CheckoutModal 
         isOpen={isCheckoutOpen} 
         onClose={() => setIsCheckoutOpen(false)}
-        appliedPromoCode={appliedPromoCode}
-        promoDiscount={promoDiscount}
-        finalTotal={finalTotal}
       />
     </>
   );
