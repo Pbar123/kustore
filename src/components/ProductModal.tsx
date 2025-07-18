@@ -4,6 +4,7 @@ import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { FavoriteButton } from './FavoriteButton';
 import { ProductCard } from './ProductCard';
+import { supabase } from '../lib/supabase';
 
 interface ProductModalProps {
   product: Product | null;
@@ -18,6 +19,8 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [measurements, setMeasurements] = useState<Record<string, Record<string, number>>>({});
+  const [measurementsLoading, setMeasurementsLoading] = useState(false);
 
   // Получаем рекомендации - сначала из той же категории, потом из других категорий
   const recommendations = React.useMemo(() => {
@@ -42,6 +45,70 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
     
     return sameCategoryProducts.slice(0, 4);
   }, [allProducts, product]);
+
+  // Загружаем замеры при открытии товара
+  React.useEffect(() => {
+    if (product && isSizeGuideOpen) {
+      loadMeasurements();
+    }
+  }, [product, isSizeGuideOpen]);
+
+  const loadMeasurements = async () => {
+    if (!product) return;
+    
+    setMeasurementsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('measurements')
+        .select('*')
+        .eq('product_id', product.id);
+      
+      if (error) throw error;
+      
+      const measurementsMap: Record<string, Record<string, number>> = {};
+      data?.forEach(measurement => {
+        measurementsMap[measurement.size] = {
+          A: measurement.measurement_a,
+          B: measurement.measurement_b,
+          C: measurement.measurement_c,
+          D: measurement.measurement_d
+        };
+      });
+      
+      setMeasurements(measurementsMap);
+    } catch (error) {
+      console.error('Error loading measurements:', error);
+    } finally {
+      setMeasurementsLoading(false);
+    }
+  };
+
+  // Схемы замеров по категориям
+  const getMeasurementSchema = (category: string) => {
+    const schemas = {
+      'shirts': {
+        image: '/measurements/tshirt-schema.jpg',
+        labels: { A: 'Ширина груди', B: 'Длина изделия', C: 'Длина рукава' }
+      },
+      'sweaters': {
+        image: '/measurements/hoodie-schema.jpg',
+        labels: { A: 'Ширина груди', B: 'Длина изделия', C: 'Длина рукава', D: 'Глубина капюшона' }
+      },
+      'jeans': {
+        image: '/measurements/pants-schema.jpg',
+        labels: { A: 'Талия', B: 'Общая длина', C: 'Бедра', D: 'Длина по внутреннему шву' }
+      },
+      'shorts': {
+        image: '/measurements/shorts-schema.jpg',
+        labels: { A: 'Талия', B: 'Длина', C: 'Бедра' }
+      },
+      'shoes': {
+        image: '/measurements/shoes-schema.jpg',
+        labels: { A: 'Длина стопы', B: 'Ширина стопы' }
+      }
+    };
+    return schemas[category as keyof typeof schemas];
+  };
 
   if (!product) return null;
 
@@ -69,13 +136,6 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
     setCurrentImageIndex(index);
   };
 
-  const getMeasurements = (size: string) => {
-    if (!product.measurements || !product.measurements[size]) {
-      return {};
-    }
-    return product.measurements[size];
-  };
-
   const getStockQuantity = (size: string) => {
     if (!product.stock_quantity || !product.stock_quantity[size]) {
       return 0;
@@ -97,6 +157,8 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
   };
 
   const maxQuantityForSelectedSize = selectedSize ? getAvailableQuantity(selectedSize) : 0;
+  const measurementSchema = getMeasurementSchema(product.category);
+  const availableSizes = product.sizes.filter(size => getStockQuantity(size) > 0);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -323,7 +385,7 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
               )}
 
               {/* Size Guide */}
-              {measurementSchema && (
+              {measurementSchema && availableSizes.length > 0 && (
                 <div className="border-t border-gray-200 pt-6">
                   <button
                     onClick={() => setIsSizeGuideOpen(!isSizeGuideOpen)}

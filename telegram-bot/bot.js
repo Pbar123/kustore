@@ -388,9 +388,9 @@ async function handleAddProductState(chatId, text, userState) {
                                  MEASUREMENTS_BY_CATEGORY[product.category].length > 0;
         
         if (needsMeasurements) {
-          userState.state = ADD_PRODUCT_STATES.WAITING_MEASUREMENTS_SIZE;
+          userState.state = ADD_PRODUCT_STATES.WAITING_MEASUREMENTS_VALUES;
           userState.measurementIndex = 0;
-          userState.measurements = {};
+          userState.currentMeasurements = {};
           bot.sendMessage(chatId, 
             `📏 Теперь добавим замеры для размера ${product.sizes[0]}\n\n` +
             `Нужные замеры для категории "${product.category}": ${MEASUREMENTS_BY_CATEGORY[product.category].join(', ')}\n\n` +
@@ -406,7 +406,7 @@ async function handleAddProductState(chatId, text, userState) {
       }
       break;
       
-    case ADD_PRODUCT_STATES.WAITING_MEASUREMENTS_SIZE:
+    case ADD_PRODUCT_STATES.WAITING_MEASUREMENTS_VALUES:
       const measurementValue = parseFloat(text);
       if (isNaN(measurementValue) || measurementValue <= 0) {
         bot.sendMessage(chatId, '❌ Введите корректное значение замера (число больше 0):');
@@ -416,10 +416,10 @@ async function handleAddProductState(chatId, text, userState) {
       const currentSize = product.sizes[Math.floor(userState.measurementIndex / MEASUREMENTS_BY_CATEGORY[product.category].length)];
       const currentMeasurement = MEASUREMENTS_BY_CATEGORY[product.category][userState.measurementIndex % MEASUREMENTS_BY_CATEGORY[product.category].length];
       
-      if (!userState.measurements[currentSize]) {
-        userState.measurements[currentSize] = {};
+      if (!userState.currentMeasurements[currentSize]) {
+        userState.currentMeasurements[currentSize] = {};
       }
-      userState.measurements[currentSize][currentMeasurement] = measurementValue;
+      userState.currentMeasurements[currentSize][currentMeasurement] = measurementValue;
       
       userState.measurementIndex++;
       
@@ -534,18 +534,18 @@ async function saveProduct(chatId, product) {
     const savedProduct = data[0];
     
     // Затем сохраняем замеры, если они есть
-    if (userStates.get(chatId)?.measurements) {
-      const measurements = userStates.get(chatId).measurements;
+    if (userStates.get(chatId)?.currentMeasurements) {
+      const measurements = userStates.get(chatId).currentMeasurements;
       const measurementRecords = [];
       
       for (const [size, values] of Object.entries(measurements)) {
         measurementRecords.push({
           product_id: savedProduct.id,
           size: size,
-          measurement_a: values.A || null,
-          measurement_b: values.B || null,
-          measurement_c: values.C || null,
-          measurement_d: values.D || null
+          measurement_a: values['A'] || null,
+          measurement_b: values['B'] || null,
+          measurement_c: values['C'] || null,
+          measurement_d: values['D'] || null
         });
       }
       
@@ -563,7 +563,7 @@ async function saveProduct(chatId, product) {
     
     userStates.delete(chatId);
     bot.sendMessage(chatId, 
-      `✅ *Товар успешно добавлен${userStates.get(chatId)?.measurements ? ' с замерами' : ''}!*\n\n` +
+      `✅ *Товар успешно добавлен с замерами!*\n\n` +
       `🆔 ID: ${savedProduct.id}\n` +
       `📝 Название: ${product.name}`, 
       { ...getMainMenu(), parse_mode: 'Markdown' }
