@@ -72,9 +72,8 @@ validateBotToken().then(() => {
 });
 
 function initializeBot() {
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
 }
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // Хранилище состояний пользователей
 const userStates = new Map();
