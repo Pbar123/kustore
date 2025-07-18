@@ -57,8 +57,22 @@ export function CheckoutModal({
       newErrors.customer_phone = 'Введите корректный номер телефона';
     }
     
-    if (!formData.delivery_address.trim()) {
-      newErrors.delivery_address = 'Адрес доставки обязателен для заполнения';
+    if (!formData.delivery_city.trim()) {
+      newErrors.delivery_city = 'Город обязателен для заполнения';
+    }
+    
+    if (!formData.delivery_postal_code.trim()) {
+      newErrors.delivery_postal_code = 'Индекс обязателен для заполнения';
+    } else if (!/^\d{6}$/.test(formData.delivery_postal_code)) {
+      newErrors.delivery_postal_code = 'Индекс должен содержать 6 цифр';
+    }
+    
+    if (!formData.delivery_street.trim()) {
+      newErrors.delivery_street = 'Улица обязательна для заполнения';
+    }
+    
+    if (!formData.delivery_house.trim()) {
+      newErrors.delivery_house = 'Номер дома обязателен для заполнения';
     }
     
     setErrors(newErrors);

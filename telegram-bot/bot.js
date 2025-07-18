@@ -87,7 +87,7 @@ function getMainMenu() {
     reply_markup: {
       keyboard: [
         ['➕ Добавить товар', '✏️ Редактировать товар'],
-        ['🎫 Управление промокодами', '👁️ Скрыть товар'],
+        ['🎫 Управление промокодами', '👁️ Скрыть/Показать товар'],
         ['📋 Список товаров', '📊 Статистика'],
         ['❌ Отмена']
       ],
@@ -210,7 +210,7 @@ bot.on('message', async (msg) => {
       await startEditProduct(chatId);
     } else if (text === '🎫 Управление промокодами') {
       await showPromoCodeMenu(chatId);
-    } else if (text === '👁️ Скрыть товар') {
+    } else if (text === '👁️ Скрыть/Показать товар') {
       await startHideProduct(chatId);
     } else if (text === '📋 Список товаров') {
       await showProductsList(chatId);
@@ -755,7 +755,7 @@ async function startHideProduct(chatId) {
   });
   
   bot.sendMessage(chatId, 
-    '👁️ *Скрыть/показать товар*\n\n' +
+    '👁️ *Управление видимостью товара*\n\n' +
     '🆔 Введите ID товара или часть названия:', 
     { parse_mode: 'Markdown' }
   );
@@ -801,13 +801,13 @@ async function findAndToggleProductVisibility(chatId, searchTerm) {
       bot.sendMessage(chatId, 
         `✅ *Статус товара изменен!*\n\n` +
         `📝 Товар: ${product.name}\n` +
-        `👁️ Статус: ${newStatus ? 'Показан' : 'Скрыт'}`, 
+        `👁️ Статус: ${newStatus ? '✅ Показан' : '🙈 Скрыт'}`, 
         { ...getMainMenu(), parse_mode: 'Markdown' }
       );
     } else {
       let message = '📋 *Найденные товары:*\n\n';
       data.forEach((product, index) => {
-        const status = product.in_stock ? '👁️ Показан' : '🙈 Скрыт';
+        const status = product.in_stock ? '✅ Показан' : '🙈 Скрыт';
         message += `${index + 1}. ${product.name} - ${status}\n`;
         message += `   ID: \`${product.id}\`\n\n`;
       });

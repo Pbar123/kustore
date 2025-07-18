@@ -58,7 +58,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Cart ({state.itemCount})</h2>
+            <h2 className="text-xl font-bold text-gray-900">Корзина ({state.itemCount})</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -72,7 +72,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
             {state.items.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <ShoppingBag className="h-16 w-16 mb-4" />
-                <p>Your cart is empty</p>
+                <p>Корзина пуста</p>
               </div>
             ) : (
               <div className="p-6 space-y-6">
@@ -87,7 +87,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900">{item.product.name}</h3>
-                      <p className="text-sm text-gray-600">Size: {item.size}</p>
+                      <p className="text-sm text-gray-600">Размер: {item.size}</p>
                       <p className="text-sm font-medium text-gray-900">
                         {item.product.real_price} руб.
                       </p>
@@ -110,7 +110,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                           onClick={() => removeItem(item.product.id, item.size)}
                           className="ml-auto text-red-500 hover:text-red-700 text-sm"
                         >
-                          Remove
+                          Удалить
                         </button>
                       </div>
                     </div>

@@ -101,7 +101,7 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Product Details</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Детали товара</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -207,7 +207,7 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
 
               {/* Size Selection */}
               <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Size</h3>
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Размер</h3>
                 <div className="flex flex-wrap gap-2 mb-8">
                   {product.sizes.map((size) => (
                     <div key={size} className="relative flex flex-col items-center">
@@ -249,7 +249,7 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
 
               {/* Quantity Selection */}
               <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Quantity</h3>
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Количество</h3>
                 {selectedSize && maxQuantityForSelectedSize === 0 && (
                   <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-red-800">
@@ -271,9 +271,17 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
                   </button>
                   <span className="text-lg font-medium min-w-[3rem] text-center">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => {
+                      const maxQty = item.product.stock_quantity?.[item.size] || 0;
+                      if (item.quantity < maxQty) {
+                        updateQuantity(item.product.id, item.size, item.quantity + 1);
+                      }
+                    }}
+                    disabled={item.quantity >= (item.product.stock_quantity?.[item.size] || 0)}
                     disabled={!selectedSize || quantity >= maxQuantityForSelectedSize}
-                    className={`p-2 border rounded-lg transition-colors ${
+                      item.quantity >= (item.product.stock_quantity?.[item.size] || 0)
+                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'border-gray-300 hover:border-black'
                       !selectedSize || quantity >= maxQuantityForSelectedSize
                         ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                         : 'border-gray-300 hover:border-black'
@@ -300,10 +308,10 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
                 }`}
               >
                 {!selectedSize 
-                  ? 'Select Size' 
+                  ? 'Выберите размер' 
                   : maxQuantityForSelectedSize === 0 
-                  ? 'Out of Stock' 
-                  : 'Add to Cart'
+                  ? 'Нет в наличии' 
+                  : 'Добавить в корзину'
                 }
               </button>
 

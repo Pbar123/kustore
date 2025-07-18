@@ -62,7 +62,7 @@ export function Header() {
       {state.itemCount > 0 && (
         <button
           onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-20 right-4 bg-red-500 text-white rounded-full px-4 py-2 shadow-lg z-40 flex items-center space-x-2 min-w-[120px] justify-center"
+          className="fixed bottom-24 right-4 bg-red-500 text-white rounded-full px-4 py-2 shadow-lg z-40 flex items-center space-x-2 min-w-[120px] justify-center hover:bg-red-600 transition-colors"
         >
           <ShoppingBag className="h-5 w-5" />
           <div className="flex flex-col items-center">
