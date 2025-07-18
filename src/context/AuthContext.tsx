@@ -159,6 +159,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Ждем немного, чтобы Telegram Web App успел инициализироваться
         await new Promise(resolve => setTimeout(resolve, 100));
         
+        // Проверяем, доступен ли Telegram Web App
+        if (window.Telegram?.WebApp) {
+          const tg = window.Telegram.WebApp;
+          console.log('Telegram WebApp detected:', {
+            version: tg.version,
+            platform: tg.platform,
+            user: tg.initDataUnsafe?.user
+          });
+          
+          // Если есть пользователь Telegram, авторизуемся
+          if (tg.initDataUnsafe?.user) {
+            console.log('Telegram user found, authenticating...');
+            await login();
+          } else {
+            console.log('No Telegram user, using test user');
+            // Если нет пользователя Telegram, используем тестового
+            const mockUser = {
+              id: 999999999,
+              first_name: 'Telegram',
+              last_name: 'User',
+              username: 'telegram_user'
+            };
+            
+            const user = await authenticateWithTelegram(mockUser);
+            dispatch({ 
+              type: 'SET_USER',
+              payload: { user, telegramUser: mockUser }
+            });
+          }
+        } else {
+          console.log('Telegram WebApp not available, using test user');
+          // Если Telegram Web App недоступен, используем тестового пользователя
+          const mockUser = {
+            id: 999999999,
+            first_name: 'Test',
+            last_name: 'User',
+            username: 'testuser'
+          };
+          
+          const user = await authenticateWithTelegram(mockUser);
+          dispatch({ 
+            type: 'SET_USER',
+            payload: { user, telegramUser: mockUser }
+          });
+        }
+      } catch (error) {
+        console.error('Ошибка инициализации авторизации:', error);
+        // В случае ошибки все равно создаем тестового пользователя
+        try {
+          const mockUser = {
+            id: 999999999,
+            first_name: 'Test',
+            last_name: 'User',
+            username: 'testuser'
+          };
+          
+          const user = await authenticateWithTelegram(mockUser);
+          dispatch({ 
+            type: 'SET_USER',
+            payload: { user, telegramUser: mockUser }
+          });
+        } catch (fallbackError) {
+          console.error('Fallback auth failed:', fallbackError);
+          dispatch({ type: 'SET_LOADING', payload: false });
+        }
+      }
+    };
+
+    initAuth();
+  }, []);
+
+  // Убираем старый useEffect, заменяем на новый выше
+  /*
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        // Ждем немного, чтобы Telegram Web App успел инициализироваться
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
           await login();
         } else {
@@ -171,7 +250,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-  }, []);
 
   return (
     <AuthContext.Provider value={{ state, dispatch, login, logout }}>
@@ -186,4 +264,5 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
 }

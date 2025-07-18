@@ -83,10 +83,6 @@ export function CheckoutModal({
     e.preventDefault();
     
     if (!validateForm()) return;
-    if (!authState.user) {
-      alert('Необходимо войти в систему для оформления заказа');
-      return;
-    }
     
     setIsSubmitting(true);
     
@@ -102,12 +98,17 @@ export function CheckoutModal({
         total: Number(item.product.real_price * item.quantity)
       }));
 
+      // Определяем user_id - может быть null для анонимных заказов
+      const userId = authState.user?.telegram_id || null;
+      
+      console.log('Creating order with user_id:', userId);
+      console.log('Auth state:', authState);
 
       // Создаем заказ в базе данных
       const { data: order, error } = await supabase
         .from('orders')
         .insert({
-          user_id: authState.user?.telegram_id || null,
+          user_id: userId,
           items: orderItems,
           total_amount: Number(orderTotal),
           customer_name: formData.customer_name,
@@ -121,10 +122,17 @@ export function CheckoutModal({
         .single();
 
       if (error) {
-        console.error('Ошибка создания заказа:', error);
+        console.error('Database error creating order:', error);
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
 
+      console.log('Order created successfully:', order);
 
       // Отправляем уведомление в Telegram
       try {
@@ -143,10 +151,12 @@ export function CheckoutModal({
       
       let errorMessage = 'Произошла ошибка при оформлении заказа.';
       if (error instanceof Error) {
-        if (error.message.includes('duplicate key')) {
-          errorMessage = 'Заказ уже существует. Попробуйте обновить страницу.';
+        if (error.message.includes('row-level security')) {
+          errorMessage = 'Ошибка доступа к базе данных. Попробуйте еще раз.';
+        } else if (error.message.includes('duplicate key')) {
+          errorMessage = 'Заказ уже существует.';
         } else if (error.message.includes('foreign key')) {
-          errorMessage = 'Ошибка данных пользователя. Попробуйте войти заново.';
+          errorMessage = 'Ошибка данных. Попробуйте еще раз.';
         } else {
           errorMessage = `Ошибка: ${error.message}`;
         }
