@@ -83,11 +83,21 @@ export function CheckoutModal({
     e.preventDefault();
     
     if (!validateForm()) return;
-    if (!authState.user) return;
+    if (!authState.user) {
+      console.error('User not authenticated');
+      alert('Необходимо войти в систему для оформления заказа');
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
+      console.log('Starting order creation...', {
+        userId: authState.user.telegram_id,
+        itemsCount: state.items.length,
+        total: orderTotal
+      });
+      
       // Подготавливаем данные заказа
       const orderItems: OrderItem[] = state.items.map(item => ({
         product_id: item.product.id,
@@ -95,9 +105,11 @@ export function CheckoutModal({
         product_image: item.product.image_url,
         size: item.size,
         quantity: item.quantity,
-        price: item.product.real_price,
-        total: item.product.real_price * item.quantity
+        price: parseFloat(item.product.real_price.toString()),
+        total: parseFloat((item.product.real_price * item.quantity).toString())
       }));
+
+      console.log('Order items prepared:', orderItems);
 
       // Создаем заказ в базе данных
       const { data: order, error } = await supabase
@@ -105,7 +117,7 @@ export function CheckoutModal({
         .insert({
           user_id: authState.user.telegram_id,
           items: orderItems,
-          total_amount: orderTotal,
+          total_amount: parseFloat(orderTotal.toString()),
           customer_name: formData.customer_name,
           customer_phone: formData.customer_phone,
           customer_email: formData.customer_email,
@@ -116,10 +128,20 @@ export function CheckoutModal({
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      console.log('Order created successfully:', order);
 
       // Отправляем уведомление в Telegram
-      await sendTelegramNotification(order.id, orderItems, formData, orderTotal, appliedPromoCode, promoDiscount);
+      try {
+        await sendTelegramNotification(order.id, orderItems, formData, orderTotal, appliedPromoCode, promoDiscount);
+      } catch (telegramError) {
+        console.warn('Telegram notification failed:', telegramError);
+        // Не прерываем процесс, если уведомление не отправилось
+      }
 
       // Очищаем корзину
       dispatch({ type: 'CLEAR_CART' });
@@ -127,7 +149,13 @@ export function CheckoutModal({
       setIsSuccess(true);
     } catch (error) {
       console.error('Ошибка при создании заказа:', error);
-      alert('Произошла ошибка при оформлении заказа. Попробуйте еще раз.');
+      
+      let errorMessage = 'Произошла ошибка при оформлении заказа.';
+      if (error instanceof Error) {
+        errorMessage += ` Детали: ${error.message}`;
+      }
+      
+      alert(errorMessage + ' Попробуйте еще раз.');
     } finally {
       setIsSubmitting(false);
     }

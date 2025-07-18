@@ -83,13 +83,13 @@ export function FavoritesPage() {
             <p className="text-gray-600 mb-6">
               Добавляйте товары в избранное, нажимая на иконку сердечка
             </p>
-            <button
-              onClick={() => window.location.href = '/all'}
+            <Link
+              to="/all"
               className="inline-flex items-center space-x-2 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
             >
               <ShoppingBag className="h-5 w-5" />
               <span>Перейти в магазин</span>
-            </button>
+            </Link>
           </div>
         ) : (
           <ProductGrid

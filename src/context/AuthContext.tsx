@@ -91,11 +91,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn('Telegram Web App not available, creating mock user for testing');
         // Для тестирования в браузере создаем тестового пользователя
         const mockUser = {
-          id: 123456789,
+          id: Date.now(), // Уникальный ID
           first_name: 'Test',
           last_name: 'User',
-          username: 'testuser'
+          username: 'testuser_' + Date.now()
         };
+        
+        console.log('Using mock user:', mockUser);
         
         // Создаем или обновляем пользователя в базе данных
         let { data: existingUser, error: fetchError } = await supabase
@@ -105,11 +107,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single();
 
         if (fetchError && fetchError.code !== 'PGRST116') {
+          console.error('Error fetching existing user:', fetchError);
           throw fetchError;
         }
 
         let user;
         if (existingUser) {
+          console.log('Updating existing user');
           const { data: updatedUser, error: updateError } = await supabase
             .from('users')
             .update({ 
@@ -122,9 +126,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .select()
             .single();
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error('Error updating user:', updateError);
+            throw updateError;
+          }
           user = updatedUser;
         } else {
+          console.log('Creating new user');
           const { data: newUser, error: insertError } = await supabase
             .from('users')
             .insert({
@@ -138,10 +146,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .select()
             .single();
 
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error('Error creating user:', insertError);
+            throw insertError;
+          }
           user = newUser;
         }
 
+        console.log('User authenticated successfully:', user);
         dispatch({ 
           type: 'SET_USER', 
           payload: { user, telegramUser: mockUser } 

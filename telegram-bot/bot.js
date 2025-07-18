@@ -19,6 +19,10 @@ if (!BOT_TOKEN || !SUPABASE_URL || !SUPABASE_SERVICE_KEY || !ADMIN_CHAT_ID) {
   console.error('SUPABASE_URL:', SUPABASE_URL ? '✅' : '❌');
   console.error('SUPABASE_SERVICE_KEY:', SUPABASE_SERVICE_KEY ? '✅' : '❌');
   console.error('ADMIN_CHAT_ID:', ADMIN_CHAT_ID ? '✅' : '❌');
+  console.error('\n🔍 Текущие значения (первые символы):');
+  console.error('BOT_TOKEN:', BOT_TOKEN ? BOT_TOKEN.substring(0, 10) + '...' : 'не задан');
+  console.error('SUPABASE_URL:', SUPABASE_URL ? SUPABASE_URL.substring(0, 20) + '...' : 'не задан');
+  console.error('ADMIN_CHAT_ID:', ADMIN_CHAT_ID ? ADMIN_CHAT_ID : 'не задан');
   console.error('\n📝 Инструкции по настройке:');
   console.error('1. Создайте бота через @BotFather в Telegram');
   console.error('2. Получите токен бота и добавьте его в .env как TELEGRAM_ADMIN_BOT_TOKEN');
@@ -977,13 +981,20 @@ async function findAndToggleProductVisibility(chatId, searchTerm) {
 // Показать список товаров
 async function showProductsList(chatId) {
   try {
+    console.log('Fetching products list...');
+    
     const { data, error } = await supabase
       .from('products')
       .select('id, name, real_price, category, in_stock')
       .order('created_at', { ascending: false })
       .limit(20);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Database error:', error);
+      throw error;
+    }
+
+    console.log('Products fetched:', data?.length || 0);
     
     if (data.length === 0) {
       bot.sendMessage(chatId, '📋 Товары не найдены.');
@@ -1001,7 +1012,7 @@ async function showProductsList(chatId) {
     bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   } catch (error) {
     console.error('Error fetching products list:', error);
-    bot.sendMessage(chatId, '❌ Ошибка при получении списка товаров.');
+    bot.sendMessage(chatId, `❌ Ошибка при получении списка товаров: ${error.message}`);
   }
 }
 
