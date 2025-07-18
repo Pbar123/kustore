@@ -321,6 +321,92 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
                   </ul>
                 </div>
               )}
+
+              {/* Size Guide */}
+              {measurementSchema && (
+                <div className="border-t border-gray-200 pt-6">
+                  <button
+                    onClick={() => setIsSizeGuideOpen(!isSizeGuideOpen)}
+                    className="flex items-center justify-between w-full text-left"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Ruler className="h-5 w-5 text-gray-600" />
+                      <h3 className="text-lg font-medium text-gray-900">Размерная сетка</h3>
+                    </div>
+                    {isSizeGuideOpen ? (
+                      <ChevronUp className="h-5 w-5 text-gray-600" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-gray-600" />
+                    )}
+                  </button>
+                  
+                  {isSizeGuideOpen && (
+                    <div className="mt-4 space-y-4">
+                      {/* Measurement Schema Image */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <img
+                          src={measurementSchema.image}
+                          alt="Схема замеров"
+                          className="w-full max-w-md mx-auto"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Measurements Table */}
+                      {measurementsLoading ? (
+                        <div className="text-center py-4">
+                          <div className="text-sm text-gray-600">Загрузка замеров...</div>
+                        </div>
+                      ) : availableSizes.length > 0 && Object.keys(measurements).length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full border border-gray-200 rounded-lg">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-2 text-left text-sm font-medium text-gray-900 border-b">
+                                  Размер
+                                </th>
+                                {Object.keys(measurementSchema.labels).map(key => (
+                                  <th key={key} className="px-4 py-2 text-center text-sm font-medium text-gray-900 border-b">
+                                    {key}
+                                    <div className="text-xs text-gray-600 font-normal">
+                                      {measurementSchema.labels[key]}
+                                    </div>
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                              {availableSizes.map(size => (
+                                <tr key={size} className={selectedSize === size ? 'bg-blue-50' : ''}>
+                                  <td className="px-4 py-2 text-sm font-medium text-gray-900">
+                                    {size}
+                                  </td>
+                                  {Object.keys(measurementSchema.labels).map(key => (
+                                    <td key={key} className="px-4 py-2 text-sm text-gray-600 text-center">
+                                      {measurements[size]?.[key] ? `${measurements[size][key]} см` : '—'}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-gray-500">
+                          <p className="text-sm">Замеры для этого товара не указаны</p>
+                        </div>
+                      )}
+                      
+                      <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+                        <p><strong>Как измерять:</strong> Все замеры указаны в сантиметрах. Измеряйте одежду в разложенном виде.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

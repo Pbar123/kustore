@@ -21,6 +21,18 @@ export interface Product {
   features?: string[];
 }
 
+export interface Measurement {
+  id: string;
+  product_id: string;
+  size: string;
+  measurement_a?: number;
+  measurement_b?: number;
+  measurement_c?: number;
+  measurement_d?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;
