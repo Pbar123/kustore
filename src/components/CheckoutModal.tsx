@@ -264,7 +264,7 @@ ${items.map(item => `• ${item.product_name} (${item.size}) x${item.quantity} =
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-gray-900">
-                      <p className="font-medium text-gray-900">{order.delivery_address}</p>
+                      {(item.product.real_price * item.quantity).toFixed(2)} руб.
                     </p>
                   </div>
                 </div>
