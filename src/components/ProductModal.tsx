@@ -272,16 +272,10 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
                   <span className="text-lg font-medium min-w-[3rem] text-center">{quantity}</span>
                   <button
                     onClick={() => {
-                      const maxQty = item.product.stock_quantity?.[item.size] || 0;
-                      if (item.quantity < maxQty) {
-                        updateQuantity(item.product.id, item.size, item.quantity + 1);
-                      }
+                      setQuantity(Math.min(maxQuantityForSelectedSize, quantity + 1));
                     }}
-                    disabled={item.quantity >= (item.product.stock_quantity?.[item.size] || 0)}
                     disabled={!selectedSize || quantity >= maxQuantityForSelectedSize}
-                      item.quantity >= (item.product.stock_quantity?.[item.size] || 0)
-                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'border-gray-300 hover:border-black'
+                    className={`p-2 border rounded-lg transition-colors ${
                       !selectedSize || quantity >= maxQuantityForSelectedSize
                         ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                         : 'border-gray-300 hover:border-black'
