@@ -85,7 +85,7 @@ export function CheckoutModal({
       const { data: order, error } = await supabase
         .from('orders')
         .insert({
-          user_id: authState.user.id,
+          user_id: authState.user.telegram_id,
           items: orderItems,
           total_amount: orderTotal,
           ...formData

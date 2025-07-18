@@ -85,11 +85,6 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
             NEW
           </span>
         )}
-        {product.is_on_sale && (
-          <span className="inline-block bg-red-600 text-white text-xs px-2 py-1 rounded ml-1">
-            SALE
-          </span>
-        )}
         <h3 className="text-sm font-medium text-gray-900 group-hover:text-gray-600 transition-colors">
           {product.name}
         </h3>

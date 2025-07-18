@@ -35,7 +35,7 @@ export function useFavorites() {
           created_at,
           products (*)
         `)
-        .eq('user_id', authState.user.id)
+        .eq('user_id', authState.user.telegram_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -63,7 +63,7 @@ export function useFavorites() {
       const { error } = await supabase
         .from('user_favorites')
         .insert({
-          user_id: authState.user.id,
+          user_id: authState.user.telegram_id,
           product_id: productId
         });
 
@@ -93,7 +93,7 @@ export function useFavorites() {
       const { error } = await supabase
         .from('user_favorites')
         .delete()
-        .eq('user_id', authState.user.id)
+        .eq('user_id', authState.user.telegram_id)
         .eq('product_id', productId);
 
       if (error) throw error;
