@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { ProductGrid } from '../components/ProductGrid';
 import { ProductModal } from '../components/ProductModal';
 import { CartSidebar } from '../components/CartSidebar';
@@ -49,7 +51,16 @@ export function NewPage() {
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Новинки</h1>
+          <div className="flex items-center mb-4">
+            <Link 
+              to="/catalog"
+              className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Назад в каталог"
+            >
+              <ArrowLeft className="h-6 w-6 text-gray-600" />
+            </Link>
+            <h1 className="text-4xl font-bold text-gray-900">Новинки</h1>
+          </div>
           <p className="text-lg text-gray-600">Последние поступления в нашем магазине</p>
         </div>
 
