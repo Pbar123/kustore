@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe area support for iOS */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
 /* Dual Range Slider Styles */
 .dual-range-slider {
   position: relative;

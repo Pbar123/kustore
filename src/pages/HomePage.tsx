@@ -33,10 +33,10 @@ export function HomePage() {
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20">
         {/* Баннер о бесплатной доставке */}
-        <div className="bg-black text-white text-center py-3 mb-8 rounded-lg">
-          <div className="flex items-center justify-center space-x-2">
+        <div className="bg-black text-white text-center py-2 mb-6 rounded-lg">
+          <div className="flex items-center justify-center space-x-1">
             <Truck className="h-5 w-5" />
-            <span className="text-sm font-medium">Бесплатная доставка при заказе от 1200 рублей</span>
+            <span className="text-xs font-medium">Бесплатная доставка от 1200 ₽</span>
           </div>
         </div>
 
@@ -64,14 +64,14 @@ export function HomePage() {
           </div>
 
           {newProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
               {newProducts.map((product) => (
                 <div 
                   key={product.id}
                   className="group cursor-pointer"
                   onClick={() => setSelectedProduct(product)}
                 >
-                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4 relative">
+                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2 relative">
                     <img
                       src={product.image_url}
                       alt={product.name}
@@ -81,19 +81,19 @@ export function HomePage() {
                         target.src = '/images/products/placeholder.jpg';
                       }}
                     />
-                    <div className="absolute top-3 left-3">
-                      <span className="inline-block bg-black text-white text-xs px-2 py-1 rounded">
+                    <div className="absolute top-1 left-1">
+                      <span className="inline-block bg-black text-white text-xs px-1.5 py-0.5 rounded">
                         NEW
                       </span>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-gray-900 group-hover:text-gray-600 transition-colors">
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-medium text-gray-900 group-hover:text-gray-600 transition-colors line-clamp-2">
                       {product.name}
                     </h3>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-900 font-medium">{product.real_price} руб.</span>
-                      <span className="text-sm text-gray-400 line-through">{product.fake_original_price} руб.</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-xs text-gray-900 font-medium">{product.real_price} ₽</span>
+                      <span className="text-xs text-gray-400 line-through">{product.fake_original_price} ₽</span>
                     </div>
                   </div>
                 </div>

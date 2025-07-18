@@ -42,7 +42,7 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4 relative">
+      <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2 relative">
         <img
           src={images[currentImageIndex]}
           alt={altTexts[currentImageIndex] || product.name}
@@ -55,11 +55,11 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
         />
         {/* Image indicator dots */}
         {images.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+          <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex space-x-1">
             {images.slice(0, 5).map((_, index) => (
               <div
                 key={index}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
+                className={`w-1 h-1 rounded-full transition-all ${
                   currentImageIndex === index
                     ? 'bg-white'
                     : 'bg-white bg-opacity-50'
@@ -67,7 +67,7 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
               />
             ))}
             {images.length > 5 && (
-              <div className="text-white text-xs bg-black bg-opacity-50 px-1 rounded">
+              <div className="text-white text-xs bg-black bg-opacity-50 px-0.5 rounded text-xs">
                 +{images.length - 5}
               </div>
             )}
@@ -75,22 +75,22 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
         )}
         
         {/* Favorite Button */}
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-1 right-1">
           <FavoriteButton productId={product.id} size="sm" />
         </div>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1">
         {product.is_new && (
-          <span className="inline-block bg-black text-white text-xs px-2 py-1 rounded">
+          <span className="inline-block bg-black text-white text-xs px-1.5 py-0.5 rounded">
             NEW
           </span>
         )}
-        <h3 className="text-sm font-medium text-gray-900 group-hover:text-gray-600 transition-colors">
+        <h3 className="text-xs font-medium text-gray-900 group-hover:text-gray-600 transition-colors line-clamp-2">
           {product.name}
         </h3>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-900 font-medium">{product.real_price} руб.</span>
-          <span className="text-sm text-gray-400 line-through">{product.fake_original_price} руб.</span>
+        <div className="flex items-center space-x-1">
+          <span className="text-xs text-gray-900 font-medium">{product.real_price} ₽</span>
+          <span className="text-xs text-gray-400 line-through">{product.fake_original_price} ₽</span>
         </div>
       </div>
     </div>

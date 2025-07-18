@@ -34,22 +34,22 @@ export function Header() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-        <div className="flex items-center justify-around h-16 px-2">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-safe">
+        <div className="flex items-center justify-around h-20 px-2">
           {navigationItems.map((item) => {
             const IconComponent = item.icon;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors ${
+                className={`flex flex-col items-center justify-center flex-1 py-3 transition-colors ${
                   item.isActive 
                     ? 'text-black' 
                     : 'text-gray-500'
                 }`}
               >
-                <IconComponent className={`h-6 w-6 mb-1 ${item.isActive ? 'text-black' : 'text-gray-500'}`} />
-                <span className={`text-xs font-medium ${item.isActive ? 'text-black' : 'text-gray-500'}`}>
+                <IconComponent className={`h-6 w-6 mb-2 ${item.isActive ? 'text-black' : 'text-gray-500'}`} />
+                <span className={`text-sm font-medium ${item.isActive ? 'text-black' : 'text-gray-500'}`}>
                   {item.label}
                 </span>
               </Link>
