@@ -19,6 +19,19 @@ if (!BOT_TOKEN || !SUPABASE_URL || !SUPABASE_SERVICE_KEY || !ADMIN_CHAT_ID) {
   console.error('SUPABASE_URL:', SUPABASE_URL ? '✅' : '❌');
   console.error('SUPABASE_SERVICE_KEY:', SUPABASE_SERVICE_KEY ? '✅' : '❌');
   console.error('ADMIN_CHAT_ID:', ADMIN_CHAT_ID ? '✅' : '❌');
+  console.error('\n📝 Инструкции по настройке:');
+  console.error('1. Создайте бота через @BotFather в Telegram');
+  console.error('2. Получите токен бота и добавьте его в .env как TELEGRAM_ADMIN_BOT_TOKEN');
+  console.error('3. Узнайте ваш Chat ID (например, через @userinfobot) и добавьте как TELEGRAM_ADMIN_CHAT_ID');
+  console.error('4. Добавьте данные Supabase из основного .env файла проекта');
+  process.exit(1);
+}
+
+// Проверяем формат токена бота
+if (!BOT_TOKEN.match(/^\d+:[A-Za-z0-9_-]{35}$/)) {
+  console.error('❌ Неверный формат токена бота!');
+  console.error('Токен должен иметь формат: 123456789:ABCdefGHIjklMNOpqrSTUvwxYZ123456789');
+  console.error('Получите правильный токен через @BotFather в Telegram');
   process.exit(1);
 }
 
