@@ -45,7 +45,7 @@ export interface OrderItem {
   product_image: string;
   size: string;
   quantity: number;
-  real_price: number;
+  price: number;
   total: number;
 }
 

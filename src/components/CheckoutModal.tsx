@@ -95,7 +95,7 @@ export function CheckoutModal({
         product_image: item.product.image_url,
         size: item.size,
         quantity: item.quantity,
-        real_price: item.product.real_price,
+        price: item.product.real_price,
         total: item.product.real_price * item.quantity
       }));
 

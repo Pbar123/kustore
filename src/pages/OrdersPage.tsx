@@ -276,7 +276,7 @@ export function OrdersPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-gray-900">{item.total} руб.</p>
-                        <p className="text-sm text-gray-600">{item.real_price} руб./шт.</p>
+                        <p className="text-sm text-gray-600">{item.price} руб./шт.</p>
                       </div>
                     </div>
                   ))}
