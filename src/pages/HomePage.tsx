@@ -8,7 +8,6 @@ import { Product } from '../types';
 export function HomePage() {
   const { products, loading, error, getNewProducts } = useProducts();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const newProducts = useMemo(() => {
     return getNewProducts().slice(0, 4); // Показываем только первые 4 новинки
@@ -32,7 +31,7 @@ export function HomePage() {
 
   return (
     <>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20">
         {/* Баннер о бесплатной доставке */}
         <div className="bg-black text-white text-center py-3 mb-8 rounded-lg">
           <div className="flex items-center justify-center space-x-2">
@@ -60,22 +59,6 @@ export function HomePage() {
               className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors group"
             >
               <span className="font-medium">ВСЕ НОВИНКИ</span>
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Link 
-              to="/new"
-              className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors group"
-            >
-              <span className="font-medium">ВСЕ НОВИНКИ</span>
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link 
-              to="/info"
-              className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors group"
-            >
-              <span className="font-medium">ИНФОРМАЦИЯ</span>
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -122,8 +105,6 @@ export function HomePage() {
             </div>
           )}
         </div>
-
-        {/* Секция промокодов */}
 
         {/* Информационный блок */}
         <div className="bg-gray-50 rounded-lg p-8 mb-8">
@@ -179,7 +160,6 @@ export function HomePage() {
         onClose={() => setSelectedProduct(null)}
         onProductClick={setSelectedProduct}
       />
-
     </>
   );
 }

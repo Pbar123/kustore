@@ -8,8 +8,8 @@ import { HomePage } from './pages/HomePage';
 import { NewPage } from './pages/NewPage';
 import { InfoPage } from './pages/InfoPage';
 import { AllProductsPage } from './pages/AllProductsPage';
-import { FavoritesPage } from './pages/FavoritesPage';
-import { OrdersPage } from './pages/OrdersPage';
+import { CatalogPage } from './pages/CatalogPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { AdminPage } from './pages/AdminPage';
 
 function App() {
@@ -24,10 +24,10 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/info" element={<InfoPage />} />
+              <Route path="/catalog" element={<CatalogPage />} />
               <Route path="/new" element={<NewPage />} />
               <Route path="/all" element={<AllProductsPage />} />
-              <Route path="/favorites" element={<FavoritesPage />} />
-              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Routes>
           </div>
