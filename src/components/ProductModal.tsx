@@ -114,9 +114,9 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
 
   if (!product) return null;
 
-  // Обрабатываем URL изображений для Яндекс.Диска
+  // Обрабатываем URL изображений для Яндекс.Диска (только для отображения)
   const rawImages = product.images || [product.image_url];
-  const images = processImageUrls(rawImages);
+  const images = processImageUrls(rawImages, false); // false = обрабатываем для отображения
   const altTexts = product.image_alt_texts || [product.name];
 
   const handleAddToCart = () => {

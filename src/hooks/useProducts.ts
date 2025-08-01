@@ -44,7 +44,7 @@ export function useProducts() {
         real_price: item.real_price,
         fake_original_price: item.fake_original_price,
         image_url: item.image_url,
-        images: item.images || [item.image_url],
+        images: item.images || [item.image_url], // Сохраняем оригинальные URL из базы данных
         image_alt_texts: item.image_alt_texts || [item.name],
         category: item.category,
         subcategory: item.subcategory,

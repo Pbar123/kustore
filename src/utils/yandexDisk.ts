@@ -86,9 +86,14 @@ export function isYandexDiskUrl(url: string): boolean {
 /**
  * Обрабатывает массив URL изображений, преобразуя ссылки Яндекс.Диска
  * @param imageUrls - массив URL изображений
+ * @param preserveOriginal - сохранять ли оригинальные URL без обработки
  * @returns массив обработанных URL
  */
-export function processImageUrls(imageUrls: string[]): string[] {
+export function processImageUrls(imageUrls: string[], preserveOriginal: boolean = false): string[] {
+  if (preserveOriginal) {
+    return imageUrls; // Возвращаем без обработки для редактирования
+  }
+  
   return imageUrls.map(url => {
     if (isYandexDiskUrl(url)) {
       return getYandexDiskDirectUrl(url);

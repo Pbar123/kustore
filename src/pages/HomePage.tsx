@@ -75,7 +75,7 @@ export function HomePage() {
                 >
                   <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2 relative">
                     <YandexDiskImage
-                      src={processImageUrls([product.image_url])[0]}
+                      src={processImageUrls([product.image_url], false)[0]} // false = обрабатываем для отображения
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />

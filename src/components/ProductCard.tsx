@@ -13,9 +13,9 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   
-  // Обрабатываем URL изображений для Яндекс.Диска
+  // Обрабатываем URL изображений для Яндекс.Диска (только для отображения)
   const rawImages = product.images || [product.image_url];
-  const images = processImageUrls(rawImages);
+  const images = processImageUrls(rawImages, false); // false = обрабатываем для отображения
   const altTexts = product.image_alt_texts || [product.name];
 
   // Auto-cycle through images on hover

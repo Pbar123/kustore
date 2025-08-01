@@ -8,6 +8,7 @@ interface YandexDiskImageProps {
   onError?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
   onLoad?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
   fallbackSrc?: string;
+  preserveOriginal?: boolean;
 }
 
 export function YandexDiskImage({ 
@@ -16,7 +17,8 @@ export function YandexDiskImage({
   className = '', 
   onError, 
   onLoad,
-  fallbackSrc = '/images/products/placeholder.jpg'
+  fallbackSrc = '/images/products/placeholder.jpg',
+  preserveOriginal = false
 }: YandexDiskImageProps) {
   const [currentSrc, setCurrentSrc] = useState<string>('');
   const [fallbackIndex, setFallbackIndex] = useState(0);
@@ -25,25 +27,25 @@ export function YandexDiskImage({
 
   // Создаем список fallback URL
   const fallbackUrls = React.useMemo(() => {
-    if (isYandexDiskUrl(src)) {
+    if (isYandexDiskUrl(src) && !preserveOriginal) {
       return createImageFallbacks(src);
     }
     return [src, fallbackSrc];
-  }, [src, fallbackSrc]);
+  }, [src, fallbackSrc, preserveOriginal]);
 
   useEffect(() => {
     setIsLoading(true);
     setHasError(false);
     setFallbackIndex(0);
     
-    // Обрабатываем URL если это Яндекс.Диск
-    if (isYandexDiskUrl(src)) {
+    // Обрабатываем URL если это Яндекс.Диск и не нужно сохранять оригинал
+    if (isYandexDiskUrl(src) && !preserveOriginal) {
       const processedUrl = getYandexDiskDirectUrl(src);
       setCurrentSrc(processedUrl);
     } else {
       setCurrentSrc(src);
     }
-  }, [src]);
+  }, [src, preserveOriginal]);
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.warn(`Ошибка загрузки изображения: ${currentSrc}`);
