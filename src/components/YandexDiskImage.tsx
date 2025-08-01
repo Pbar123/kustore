@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getYandexDiskDirectUrl, isYandexDiskUrl, createImageFallbacks, getEmbedUrl } from '../utils/yandexDisk';
+import { createImageFallbacks, isYandexDiskUrl } from '../utils/yandexDisk';
 
 interface YandexDiskImageProps {
   src: string;
@@ -8,7 +8,6 @@ interface YandexDiskImageProps {
   onError?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
   onLoad?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
   fallbackSrc?: string;
-  preserveOriginal?: boolean;
 }
 
 export function YandexDiskImage({ 
@@ -17,8 +16,7 @@ export function YandexDiskImage({
   className = '', 
   onError, 
   onLoad,
-  fallbackSrc = '/images/products/placeholder.jpg',
-  preserveOriginal = false
+  fallbackSrc = '/images/products/placeholder.jpg'
 }: YandexDiskImageProps) {
   console.log('YandexDiskImage: Component rendered with src:', src);
   
@@ -26,12 +24,12 @@ export function YandexDiskImage({
   const [fallbackIndex, setFallbackIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [useIframe, setUseIframe] = useState(false);
+  const [showManualLoad, setShowManualLoad] = useState(false);
 
   // Создаем список fallback URL
   const fallbackUrls = React.useMemo(() => {
     console.log('YandexDiskImage: Creating fallback URLs for:', src);
-    if (isYandexDiskUrl(src) && !preserveOriginal) {
+    if (isYandexDiskUrl(src)) {
       const fallbacks = createImageFallbacks(src);
       console.log('YandexDiskImage: Generated fallbacks:', fallbacks);
       return fallbacks;
@@ -39,35 +37,27 @@ export function YandexDiskImage({
     const simpleFallbacks = [src, fallbackSrc];
     console.log('YandexDiskImage: Using simple fallbacks:', simpleFallbacks);
     return simpleFallbacks;
-  }, [src, fallbackSrc, preserveOriginal]);
+  }, [src, fallbackSrc]);
 
   useEffect(() => {
     console.log('YandexDiskImage: Loading image:', src);
     console.log('YandexDiskImage: Is Yandex Disk URL:', isYandexDiskUrl(src));
-    console.log('YandexDiskImage: Preserve original:', preserveOriginal);
     console.log('YandexDiskImage: Fallback URLs:', fallbackUrls);
     
     setIsLoading(true);
     setHasError(false);
     setFallbackIndex(0);
-    setUseIframe(false);
+    setShowManualLoad(false);
     
     // Используем первый URL из fallback списка
     console.log('YandexDiskImage: Using first fallback URL:', fallbackUrls[0]);
     setCurrentSrc(fallbackUrls[0]);
-  }, [src, preserveOriginal]);
+  }, [src]);
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.log(`YandexDiskImage: Ошибка загрузки изображения: ${currentSrc}`);
     console.log('YandexDiskImage: Failed URL:', e.currentTarget.src);
-    
-    // Если это была попытка загрузить Яндекс.Диск URL и мы еще не пробовали iframe
-    if (isYandexDiskUrl(currentSrc) && !useIframe && currentSrc.includes('/i/')) {
-      console.log('YandexDiskImage: Trying iframe approach for Yandex Disk');
-      setUseIframe(true);
-      setIsLoading(false);
-      return;
-    }
+    console.log('YandexDiskImage: Image natural dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
     
     // Пробуем следующий fallback URL
     if (fallbackIndex < fallbackUrls.length - 1) {
@@ -75,11 +65,11 @@ export function YandexDiskImage({
       console.log(`YandexDiskImage: Trying fallback ${nextIndex}: ${fallbackUrls[nextIndex]}`);
       setFallbackIndex(nextIndex);
       setCurrentSrc(fallbackUrls[nextIndex]);
-      setUseIframe(false);
     } else {
-      console.log('YandexDiskImage: All fallbacks failed');
+      console.log('YandexDiskImage: All fallbacks failed, showing manual load option');
       setHasError(true);
       setIsLoading(false);
+      setShowManualLoad(isYandexDiskUrl(src)); // Показываем кнопку только для Яндекс.Диска
     }
     
     onError?.(e);
@@ -91,14 +81,13 @@ export function YandexDiskImage({
     console.log('YandexDiskImage: Image dimensions:', img.naturalWidth, 'x', img.naturalHeight);
     setIsLoading(false);
     setHasError(false);
-    setUseIframe(false);
+    setShowManualLoad(false);
     onLoad?.(e);
   };
 
-  const handleIframeLoad = () => {
-    console.log('YandexDiskImage: Iframe loaded successfully');
-    setIsLoading(false);
-    setHasError(false);
+  const handleManualLoad = () => {
+    // Открываем изображение в новой вкладке
+    window.open(src, '_blank');
   };
 
   console.log('YandexDiskImage: Current state:', {
@@ -106,11 +95,11 @@ export function YandexDiskImage({
     isLoading,
     hasError,
     fallbackIndex,
-    useIframe
+    showManualLoad
   });
 
-  // Если все fallback'и не сработали, показываем placeholder с ошибкой
-  if (hasError) {
+  // Если все fallback'и не сработали
+  if (hasError && !showManualLoad) {
     console.log('YandexDiskImage: Showing error placeholder');
     return (
       <div className={`bg-red-100 flex items-center justify-center ${className}`}>
@@ -124,29 +113,23 @@ export function YandexDiskImage({
     );
   }
 
-  // Если нужно использовать iframe для Яндекс.Диска
-  if (useIframe && isYandexDiskUrl(src)) {
-    console.log('YandexDiskImage: Rendering iframe for Yandex Disk');
-    const embedUrl = getEmbedUrl(src);
+  // Если показываем опцию ручной загрузки
+  if (showManualLoad) {
+    console.log('YandexDiskImage: Showing manual load option');
     return (
-      <div className={`relative ${className}`}>
-        {isLoading && (
-          <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-1">Загрузка через iframe...</div>
-              <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-              </svg>
-            </div>
-          </div>
-        )}
-        <iframe
-          src={embedUrl}
-          className={`w-full h-full border-0 ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-          onLoad={handleIframeLoad}
-          title={alt}
-          sandbox="allow-same-origin allow-scripts"
-        />
+      <div className={`bg-blue-100 flex items-center justify-center ${className}`}>
+        <div className="text-center p-2">
+          <svg className="w-8 h-8 text-blue-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+          </svg>
+          <div className="text-xs text-blue-800 mb-2">Изображение заблокировано</div>
+          <button
+            onClick={handleManualLoad}
+            className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
+          >
+            Открыть в новой вкладке
+          </button>
+        </div>
       </div>
     );
   }
