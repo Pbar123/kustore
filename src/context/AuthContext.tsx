@@ -250,6 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
+  */
 
   return (
     <AuthContext.Provider value={{ state, dispatch, login, logout }}>
@@ -264,5 +265,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
 }
