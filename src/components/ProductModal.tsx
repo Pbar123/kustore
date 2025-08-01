@@ -4,6 +4,8 @@ import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { FavoriteButton } from './FavoriteButton';
 import { ProductCard } from './ProductCard';
+import { YandexDiskImage } from './YandexDiskImage';
+import { processImageUrls } from '../utils/yandexDisk';
 import { supabase } from '../lib/supabase';
 
 interface ProductModalProps {
@@ -112,7 +114,9 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
 
   if (!product) return null;
 
-  const images = product.images || [product.image_url];
+  // Обрабатываем URL изображений для Яндекс.Диска
+  const rawImages = product.images || [product.image_url];
+  const images = processImageUrls(rawImages);
   const altTexts = product.image_alt_texts || [product.name];
 
   const handleAddToCart = () => {
@@ -179,15 +183,10 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
             <div className="space-y-4">
               {/* Main Image */}
               <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group">
-                <img
+                <YandexDiskImage
                   src={images[currentImageIndex]}
                   alt={altTexts[currentImageIndex] || product.name}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback to placeholder if image fails to load
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/images/products/placeholder.jpg';
-                  }}
                 />
                 
                 {/* Navigation Arrows */}
@@ -229,15 +228,10 @@ export function ProductModal({ product, allProducts, onClose, onProductClick }: 
                           : 'border-transparent hover:border-gray-300'
                       }`}
                     >
-                      <img
+                      <YandexDiskImage
                         src={image}
                         alt={altTexts[index] || `${product.name} - Image ${index + 1}`}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Fallback to placeholder if image fails to load
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/images/products/placeholder.jpg';
-                        }}
                       />
                     </button>
                   ))}

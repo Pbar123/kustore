@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { FavoriteButton } from './FavoriteButton';
+import { YandexDiskImage } from './YandexDiskImage';
+import { processImageUrls } from '../utils/yandexDisk';
 
 interface ProductCardProps {
   product: Product;
@@ -11,7 +13,9 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   
-  const images = product.images || [product.image_url];
+  // Обрабатываем URL изображений для Яндекс.Диска
+  const rawImages = product.images || [product.image_url];
+  const images = processImageUrls(rawImages);
   const altTexts = product.image_alt_texts || [product.name];
 
   // Auto-cycle through images on hover
@@ -43,15 +47,10 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
       onMouseLeave={handleMouseLeave}
     >
       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2 relative">
-        <img
+        <YandexDiskImage
           src={images[currentImageIndex]}
           alt={altTexts[currentImageIndex] || product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            // Fallback to placeholder if image fails to load
-            const target = e.target as HTMLImageElement;
-            target.src = '/images/products/placeholder.jpg';
-          }}
         />
         {/* Image indicator dots */}
         {images.length > 1 && (

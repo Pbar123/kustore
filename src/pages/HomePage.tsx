@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, ArrowRight } from 'lucide-react';
 import { ProductModal } from '../components/ProductModal';
+import { YandexDiskImage } from '../components/YandexDiskImage';
+import { processImageUrls } from '../utils/yandexDisk';
 import { useProducts } from '../hooks/useProducts';
 import { Product } from '../types';
 
@@ -72,14 +74,10 @@ export function HomePage() {
                   onClick={() => setSelectedProduct(product)}
                 >
                   <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2 relative">
-                    <img
-                      src={product.image_url}
+                    <YandexDiskImage
+                      src={processImageUrls([product.image_url])[0]}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/images/products/placeholder.jpg';
-                      }}
                     />
                     <div className="absolute top-1 left-1">
                       <span className="inline-block bg-black text-white text-xs px-1.5 py-0.5 rounded">
