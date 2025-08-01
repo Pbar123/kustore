@@ -27,6 +27,29 @@ if (!BOT_TOKEN || !SUPABASE_URL || !SUPABASE_SERVICE_KEY || !ADMIN_CHAT_ID) {
   process.exit(1);
 }
 
+// Тестируем подключение к Supabase при запуске
+async function testSupabaseConnection() {
+  try {
+    console.log('🔍 Тестирование подключения к Supabase...');
+    const { data, error } = await supabase
+      .from('products')
+      .select('count')
+      .limit(1);
+    
+    if (error) {
+      console.error('❌ Ошибка подключения к Supabase:', error.message);
+      console.error('Проверьте переменные SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY');
+      return false;
+    }
+    
+    console.log('✅ Подключение к Supabase успешно!');
+    return true;
+  } catch (error) {
+    console.error('❌ Критическая ошибка подключения к Supabase:', error.message);
+    return false;
+  }
+}
+
 // Проверяем формат токена бота
 if (!BOT_TOKEN.match(/^\d+:[A-Za-z0-9_-]{35}$/)) {
   console.error('❌ Неверный формат токена бота!');
@@ -71,7 +94,13 @@ async function validateBotToken() {
 }
 
 // Валидируем токен перед запуском
-validateBotToken().then(() => {
+validateBotToken().then(async () => {
+  // Тестируем подключение к Supabase
+  const supabaseOk = await testSupabaseConnection();
+  if (!supabaseOk) {
+    console.error('❌ Не удалось подключиться к Supabase. Бот может работать некорректно.');
+    console.error('Проверьте настройки в .env файле');
+  }
   // Инициализация завершена в validateBotToken
 });
 
@@ -587,15 +616,28 @@ ${product.features && product.features.length > 0 ? `✨ *Особенности
 // Сохранить товар в базу данных
 async function saveProduct(chatId, product) {
   try {
+    console.log('Attempting to save product:', product.name);
+    console.log('Supabase URL:', SUPABASE_URL ? 'Set' : 'Missing');
+    console.log('Supabase Key:', SUPABASE_SERVICE_KEY ? 'Set (length: ' + SUPABASE_SERVICE_KEY.length + ')' : 'Missing');
+    
     // Сначала сохраняем товар
     const { data, error } = await supabase
       .from('products')
       .insert([product])
       .select();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw error;
+    }
     
     const savedProduct = data[0];
+    console.log('Product saved successfully with ID:', savedProduct.id);
     
     // Затем сохраняем замеры, если они есть
     if (userStates.get(chatId)?.currentMeasurements) {
@@ -614,6 +656,7 @@ async function saveProduct(chatId, product) {
       }
       
       if (measurementRecords.length > 0) {
+        console.log('Saving measurements:', measurementRecords.length, 'records');
         const { error: measurementError } = await supabase
           .from('measurements')
           .insert(measurementRecords);
@@ -634,9 +677,27 @@ async function saveProduct(chatId, product) {
     );
   } catch (error) {
     console.error('Error saving product:', error);
+    
+    let errorMessage = '❌ Ошибка при сохранении товара:\n';
+    
+    if (error.code === 'ENOTFOUND' || error.message.includes('fetch failed')) {
+      errorMessage += 'Проблема с подключением к базе данных.\n';
+      errorMessage += 'Проверьте:\n';
+      errorMessage += '• Интернет соединение\n';
+      errorMessage += '• Правильность SUPABASE_URL\n';
+      errorMessage += '• Доступность Supabase сервиса';
+    } else if (error.message.includes('JWT')) {
+      errorMessage += 'Проблема с авторизацией в Supabase.\n';
+      errorMessage += 'Проверьте SUPABASE_SERVICE_ROLE_KEY';
+    } else if (error.message.includes('violates')) {
+      errorMessage += 'Нарушение ограничений базы данных.\n';
+      errorMessage += 'Возможно, товар с таким именем уже существует.';
+    } else {
+      errorMessage += error.message;
+    }
+    
     bot.sendMessage(chatId, 
-      `❌ Ошибка при сохранении товара: ${error.message}\n\n` +
-      'Попробуйте еще раз.'
+      errorMessage + '\n\nПопробуйте еще раз.'
     );
   }
 }
@@ -852,8 +913,12 @@ async function updateProductField(chatId, newValue, userState) {
         
       case 'images':
         processedValue = newValue.split(',').map(path => path.trim());
-        // Обновляем также основное изображение
-        await supabase
+        
+        console.log('Updating images for product:', product.id);
+        console.log('New images:', processedValue);
+        
+        // Обновляем изображения, основное изображение и alt тексты одновременно
+        const { error: updateError } = await supabase
           .from('products')
           .update({ 
             images: processedValue,
@@ -861,6 +926,11 @@ async function updateProductField(chatId, newValue, userState) {
             image_alt_texts: processedValue.map(() => product.name)
           })
           .eq('id', product.id);
+        
+        if (updateError) {
+          console.error('Error updating images:', updateError);
+          throw updateError;
+        }
         
         userStates.delete(chatId);
         bot.sendMessage(chatId, 
@@ -877,13 +947,18 @@ async function updateProductField(chatId, newValue, userState) {
         break;
     }
     
+    console.log('Updating product field:', editField, 'with value:', processedValue);
+    
     // Обновляем товар в базе данных
     const { error } = await supabase
       .from('products')
       .update({ [editField]: processedValue })
       .eq('id', product.id);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating product field:', error);
+      throw error;
+    }
     
     userStates.delete(chatId);
     bot.sendMessage(chatId, 
@@ -895,8 +970,19 @@ async function updateProductField(chatId, newValue, userState) {
     );
   } catch (error) {
     console.error('Error updating product:', error);
+    
+    let errorMessage = '❌ Ошибка при обновлении товара:\n';
+    
+    if (error.code === 'ENOTFOUND' || error.message.includes('fetch failed')) {
+      errorMessage += 'Проблема с подключением к базе данных.';
+    } else if (error.message.includes('JWT')) {
+      errorMessage += 'Проблема с авторизацией в Supabase.';
+    } else {
+      errorMessage += error.message;
+    }
+    
     bot.sendMessage(chatId, 
-      `❌ Ошибка при обновлении товара: ${error.message}`
+      errorMessage + '\n\nПопробуйте еще раз.'
     );
   }
 }
