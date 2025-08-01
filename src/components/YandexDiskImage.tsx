@@ -56,14 +56,14 @@ export function YandexDiskImage({
   }, [src, preserveOriginal]);
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error(`YandexDiskImage: Ошибка загрузки изображения: ${currentSrc}`);
-    console.error('YandexDiskImage: Fallback URLs:', fallbackUrls);
-    console.error('YandexDiskImage: Failed URL:', e.currentTarget.src);
+    console.log(`YandexDiskImage: Ошибка загрузки изображения: ${currentSrc}`);
+    console.log('YandexDiskImage: Fallback URLs:', fallbackUrls);
+    console.log('YandexDiskImage: Failed URL:', e.currentTarget.src);
     
     // Получаем детали ошибки
     const img = e.currentTarget;
-    console.error('YandexDiskImage: Image natural dimensions:', img.naturalWidth, 'x', img.naturalHeight);
-    console.error('YandexDiskImage: Image complete:', img.complete);
+    console.log('YandexDiskImage: Image natural dimensions:', img.naturalWidth, 'x', img.naturalHeight);
+    console.log('YandexDiskImage: Image complete:', img.complete);
     
     // Пробуем следующий fallback URL
     if (fallbackIndex < fallbackUrls.length - 1) {
@@ -72,8 +72,8 @@ export function YandexDiskImage({
       setFallbackIndex(nextIndex);
       setCurrentSrc(fallbackUrls[nextIndex]);
     } else {
-      console.error('YandexDiskImage: All fallbacks failed');
-      console.error('YandexDiskImage: Final fallback URLs tried:', fallbackUrls);
+      console.log('YandexDiskImage: All fallbacks failed');
+      console.log('YandexDiskImage: Final fallback URLs tried:', fallbackUrls);
       setHasError(true);
       setIsLoading(false);
     }
