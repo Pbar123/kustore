@@ -24,8 +24,8 @@ export function getYandexDiskDirectUrl(publicUrl: string): string {
     // Если это публичная ссылка вида https://disk.yandex.ru/i/...
     if (publicUrl.includes('disk.yandex.ru/i/')) {
       const fileId = publicUrl.split('/i/')[1];
-      // Используем более надежный способ через прямую ссылку
-      const directUrl = `https://downloader.disk.yandex.ru/disk/public/?url=ya-disk-public%3A%2F%2F${fileId}&filename=image`;
+      // Пробуем несколько вариантов получения изображения
+      const directUrl = `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(publicUrl)}`;
       console.log('getYandexDiskDirectUrl: Converted disk.yandex.ru/i/ to:', directUrl);
       return directUrl;
     }
@@ -33,7 +33,7 @@ export function getYandexDiskDirectUrl(publicUrl: string): string {
     // Если это публичная ссылка вида https://yadi.sk/i/...
     if (publicUrl.includes('yadi.sk/i/')) {
       const fileId = publicUrl.split('/i/')[1];
-      const directUrl = `https://downloader.disk.yandex.ru/disk/public/?url=ya-disk-public%3A%2F%2F${fileId}&filename=image`;
+      const directUrl = `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(`https://disk.yandex.ru/i/${fileId}`)}`;
       console.log('getYandexDiskDirectUrl: Converted yadi.sk/i/ to:', directUrl);
       return directUrl;
     }
@@ -43,7 +43,7 @@ export function getYandexDiskDirectUrl(publicUrl: string): string {
       const urlParams = new URLSearchParams(publicUrl.split('?')[1]);
       const publicKey = urlParams.get('public_key');
       if (publicKey) {
-        const directUrl = `https://downloader.disk.yandex.ru/disk/public/?url=${encodeURIComponent(publicKey)}&filename=image`;
+        const directUrl = `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(publicKey)}`;
         console.log('getYandexDiskDirectUrl: Converted public_key URL to:', directUrl);
         return directUrl;
       }
@@ -124,15 +124,19 @@ export function createImageFallbacks(originalUrl: string): string[] {
   const fallbacks = [originalUrl];
   
   if (isYandexDiskUrl(originalUrl)) {
-    // Добавляем альтернативные способы получения изображения
-    const baseUrl = getYandexDiskDirectUrl(originalUrl);
+    // Добавляем разные способы получения изображения из Яндекс.Диска
+    const fileId = originalUrl.includes('/i/') ? originalUrl.split('/i/')[1] : '';
     
-    // Пробуем разные методы получения изображения
     fallbacks.push(
-      // Альтернативный способ через preview
-      originalUrl.replace('disk.yandex.ru/i/', 'downloader.disk.yandex.ru/preview?url=ya-disk-public%3A%2F%2F') + '&name=image&size=800x600',
-      // Прямая ссылка на оригинальную страницу
+      // Через официальный API
+      `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(originalUrl)}`,
+      // Через старый downloader API
+      `https://downloader.disk.yandex.ru/disk/public/?url=ya-disk-public%3A%2F%2F${fileId}&filename=image`,
+      // Через preview API
+      `https://downloader.disk.yandex.ru/preview?url=ya-disk-public%3A%2F%2F${fileId}&name=image&size=800x600`,
+      // Оригинальная ссылка
       originalUrl,
+      // Финальный placeholder
       '/images/products/placeholder.jpg' // Финальный fallback
     );
   } else {

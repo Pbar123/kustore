@@ -24,6 +24,7 @@ export function YandexDiskImage({
   const [fallbackIndex, setFallbackIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [apiUrl, setApiUrl] = useState<string>('');
 
   // Создаем список fallback URL
   const fallbackUrls = React.useMemo(() => {
@@ -44,15 +45,46 @@ export function YandexDiskImage({
     
     // Обрабатываем URL если это Яндекс.Диск и не нужно сохранять оригинал
     if (isYandexDiskUrl(src) && !preserveOriginal) {
-      const processedUrl = getYandexDiskDirectUrl(src);
-      console.log('YandexDiskImage: Processed URL:', processedUrl);
-      setCurrentSrc(processedUrl);
+      // Пробуем получить прямую ссылку через API
+      fetchYandexDiskImage(src);
     } else {
       console.log('YandexDiskImage: Using original URL:', src);
       setCurrentSrc(src);
     }
   }, [src, preserveOriginal]);
 
+  const fetchYandexDiskImage = async (originalUrl: string) => {
+    try {
+      console.log('YandexDiskImage: Fetching direct URL for:', originalUrl);
+      
+      // Пробуем получить прямую ссылку через API
+      const apiUrl = `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(originalUrl)}`;
+      console.log('YandexDiskImage: API URL:', apiUrl);
+      
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('YandexDiskImage: API response:', data);
+        if (data.href) {
+          console.log('YandexDiskImage: Got direct URL:', data.href);
+          setCurrentSrc(data.href);
+          return;
+        }
+      }
+      
+      // Если API не сработал, используем fallback методы
+      console.log('YandexDiskImage: API failed, using fallback');
+      const processedUrl = getYandexDiskDirectUrl(originalUrl);
+      console.log('YandexDiskImage: Fallback URL:', processedUrl);
+      setCurrentSrc(processedUrl);
+      
+    } catch (error) {
+      console.error('YandexDiskImage: Error fetching direct URL:', error);
+      // В случае ошибки используем обычную обработку
+      const processedUrl = getYandexDiskDirectUrl(originalUrl);
+      setCurrentSrc(processedUrl);
+    }
+  };
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error(`YandexDiskImage: Ошибка загрузки изображения: ${currentSrc}`);
     console.error('YandexDiskImage: Fallback URLs:', fallbackUrls);
