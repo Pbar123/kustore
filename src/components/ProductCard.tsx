@@ -15,7 +15,9 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
   
   // Обрабатываем URL изображений для Яндекс.Диска (только для отображения)
   const rawImages = product.images || [product.image_url];
+  console.log('ProductCard: Raw images for product', product.name, ':', rawImages);
   const images = processImageUrls(rawImages, false); // false = обрабатываем для отображения
+  console.log('ProductCard: Processed images:', images);
   const altTexts = product.image_alt_texts || [product.name];
 
   // Auto-cycle through images on hover

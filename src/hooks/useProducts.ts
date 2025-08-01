@@ -45,6 +45,7 @@ export function useProducts() {
         fake_original_price: item.fake_original_price,
         image_url: item.image_url,
         images: item.images || [item.image_url], // Сохраняем оригинальные URL из базы данных
+        // Debug: логируем изображения для каждого товара
         image_alt_texts: item.image_alt_texts || [item.name],
         category: item.category,
         subcategory: item.subcategory,
@@ -60,6 +61,14 @@ export function useProducts() {
         stock_quantity: item.stock_quantity || {},
         features: item.features || []
       }));
+
+      // Debug: логируем все изображения
+      transformedProducts.forEach(product => {
+        console.log(`Product ${product.name}:`, {
+          image_url: product.image_url,
+          images: product.images
+        });
+      });
 
       setProducts(transformedProducts);
       console.log('Transformed products:', transformedProducts);

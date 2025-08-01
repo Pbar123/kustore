@@ -12,22 +12,29 @@ export interface YandexDiskConfig {
  */
 export function getYandexDiskDirectUrl(publicUrl: string): string {
   try {
+    console.log('getYandexDiskDirectUrl: Input URL:', publicUrl);
+    
     // Если это уже прямая ссылка, возвращаем как есть
     if (publicUrl.includes('downloader.disk.yandex.ru') || 
         publicUrl.includes('storage.yandexcloud.net')) {
+      console.log('getYandexDiskDirectUrl: Already direct URL');
       return publicUrl;
     }
 
     // Если это публичная ссылка вида https://disk.yandex.ru/i/...
     if (publicUrl.includes('disk.yandex.ru/i/')) {
       const fileId = publicUrl.split('/i/')[1];
-      return `https://downloader.disk.yandex.ru/preview?url=ya-disk-public%3A%2F%2F${fileId}&name=image&size=800x600`;
+      const directUrl = `https://downloader.disk.yandex.ru/preview?url=ya-disk-public%3A%2F%2F${fileId}&name=image&size=800x600`;
+      console.log('getYandexDiskDirectUrl: Converted disk.yandex.ru/i/ to:', directUrl);
+      return directUrl;
     }
 
     // Если это публичная ссылка вида https://yadi.sk/i/...
     if (publicUrl.includes('yadi.sk/i/')) {
       const fileId = publicUrl.split('/i/')[1];
-      return `https://downloader.disk.yandex.ru/preview?url=ya-disk-public%3A%2F%2F${fileId}&name=image&size=800x600`;
+      const directUrl = `https://downloader.disk.yandex.ru/preview?url=ya-disk-public%3A%2F%2F${fileId}&name=image&size=800x600`;
+      console.log('getYandexDiskDirectUrl: Converted yadi.sk/i/ to:', directUrl);
+      return directUrl;
     }
 
     // Если это публичная ссылка с параметрами
@@ -35,11 +42,14 @@ export function getYandexDiskDirectUrl(publicUrl: string): string {
       const urlParams = new URLSearchParams(publicUrl.split('?')[1]);
       const publicKey = urlParams.get('public_key');
       if (publicKey) {
-        return `https://downloader.disk.yandex.ru/preview?url=${encodeURIComponent(publicKey)}&name=image&size=800x600`;
+        const directUrl = `https://downloader.disk.yandex.ru/preview?url=${encodeURIComponent(publicKey)}&name=image&size=800x600`;
+        console.log('getYandexDiskDirectUrl: Converted public_key URL to:', directUrl);
+        return directUrl;
       }
     }
 
     // Если формат не распознан, возвращаем исходную ссылку
+    console.log('getYandexDiskDirectUrl: Format not recognized, returning original');
     return publicUrl;
   } catch (error) {
     console.error('Ошибка преобразования ссылки Яндекс.Диска:', error);
