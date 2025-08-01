@@ -27,6 +27,8 @@ export function useFavorites() {
       setLoading(true);
       setError(null);
 
+      console.log('Fetching favorites for user:', authState.user.telegram_id);
+
       const { data, error } = await supabase
         .from('user_favorites')
         .select(`
@@ -35,10 +37,12 @@ export function useFavorites() {
           created_at,
           products (*)
         `)
-        .eq('user_id', authState.user.telegram_id)
+        .eq('user_id', authState.user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      console.log('Favorites data:', data);
 
       const favoriteProducts = data?.map(item => item.products).filter(Boolean) || [];
       const ids = new Set(favoriteProducts.map(product => product.id));
@@ -60,10 +64,12 @@ export function useFavorites() {
     }
 
     try {
+      console.log('Adding to favorites:', { userId: authState.user.id, productId });
+
       const { error } = await supabase
         .from('user_favorites')
         .insert({
-          user_id: authState.user.telegram_id,
+          user_id: authState.user.id,
           product_id: productId
         });
 
@@ -73,9 +79,11 @@ export function useFavorites() {
           setError('Товар уже в избранном');
           return false;
         }
+        console.error('Error adding to favorites:', error);
         throw error;
       }
 
+      console.log('Successfully added to favorites');
 
       // Обновляем локальное состояние
       setFavoriteIds(prev => new Set([...prev, productId]));
@@ -99,13 +107,17 @@ export function useFavorites() {
     }
 
     try {
+      console.log('Removing from favorites:', { userId: authState.user.id, productId });
+
       const { error } = await supabase
         .from('user_favorites')
         .delete()
-        .eq('user_id', authState.user.telegram_id)
+        .eq('user_id', authState.user.id)
         .eq('product_id', productId);
 
       if (error) throw error;
+
+      console.log('Successfully removed from favorites');
 
       // Обновляем локальное состояние
       setFavoriteIds(prev => {

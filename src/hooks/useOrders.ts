@@ -28,7 +28,7 @@ export function useOrders() {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('user_id', authState.user.telegram_id)
+        .eq('user_id', authState.user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

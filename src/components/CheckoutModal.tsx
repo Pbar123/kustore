@@ -99,7 +99,7 @@ export function CheckoutModal({
       }));
 
       // Определяем user_id - может быть null для анонимных заказов
-      const userId = authState.user?.telegram_id || null;
+      const userId = authState.user?.id || null;
       
       console.log('Creating order with user_id:', userId);
       console.log('Auth state:', authState);

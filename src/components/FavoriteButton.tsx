@@ -23,10 +23,12 @@ export function FavoriteButton({ productId, className = '', size = 'md' }: Favor
     e.stopPropagation(); // Prevent triggering parent click events
     
     if (!authState.isAuthenticated) {
-      // Можно показать уведомление о необходимости авторизации
+      console.log('User not authenticated, cannot add to favorites');
+      alert('Войдите в систему, чтобы добавлять товары в избранное');
       return;
     }
     
+    console.log('Toggling favorite for product:', productId);
     await toggleFavorite(productId);
   };
 
