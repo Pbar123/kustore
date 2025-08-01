@@ -5,6 +5,7 @@ interface UploadOptions {
   maxSize?: number; // в байтах
   allowedTypes?: string[];
   bucket?: string;
+  folder?: string;
 }
 
 export function useImageUpload(options: UploadOptions = {}) {
@@ -13,9 +14,10 @@ export function useImageUpload(options: UploadOptions = {}) {
   const [error, setError] = useState<string | null>(null);
 
   const {
-    maxSize = 5 * 1024 * 1024, // 5MB
-    allowedTypes = ['image/jpeg', 'image/png', 'image/webp'],
-    bucket = 'product-images'
+    maxSize = 10 * 1024 * 1024, // 10MB
+    allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    bucket = 'product-images',
+    folder = 'products'
   } = options;
 
   const uploadImage = async (file: File): Promise<string> => {
@@ -30,15 +32,19 @@ export function useImageUpload(options: UploadOptions = {}) {
       }
 
       if (!allowedTypes.includes(file.type)) {
-        throw new Error('Неподдерживаемый тип файла');
+        throw new Error('Неподдерживаемый тип файла. Разрешены: JPG, PNG, WebP, GIF');
       }
 
-      // Генерируем уникальное имя файла
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `products/${fileName}`;
-
       setProgress(25);
+
+      // Генерируем уникальное имя файла
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${folder}/${fileName}`;
+
+      console.log('Uploading to Supabase Storage:', { bucket, filePath, fileSize: file.size });
+
+      setProgress(50);
 
       // Загружаем в Supabase Storage
       const { data, error: uploadError } = await supabase.storage
@@ -48,8 +54,12 @@ export function useImageUpload(options: UploadOptions = {}) {
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Supabase upload error:', uploadError);
+        throw uploadError;
+      }
 
+      console.log('Upload successful:', data);
       setProgress(75);
 
       // Получаем публичный URL
@@ -57,10 +67,13 @@ export function useImageUpload(options: UploadOptions = {}) {
         .from(bucket)
         .getPublicUrl(filePath);
 
+      console.log('Generated public URL:', publicUrl);
       setProgress(100);
+      
       return publicUrl;
 
     } catch (err) {
+      console.error('Upload error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки';
       setError(errorMessage);
       throw new Error(errorMessage);
@@ -74,9 +87,14 @@ export function useImageUpload(options: UploadOptions = {}) {
     const urls: string[] = [];
     
     for (let i = 0; i < files.length; i++) {
-      const url = await uploadImage(files[i]);
-      urls.push(url);
-      setProgress(((i + 1) / files.length) * 100);
+      try {
+        const url = await uploadImage(files[i]);
+        urls.push(url);
+        setProgress(((i + 1) / files.length) * 100);
+      } catch (error) {
+        console.error(`Error uploading file ${i + 1}:`, error);
+        // Продолжаем загрузку остальных файлов
+      }
     }
     
     return urls;
@@ -87,13 +105,20 @@ export function useImageUpload(options: UploadOptions = {}) {
       // Извлекаем путь из URL
       const urlParts = url.split('/');
       const fileName = urlParts[urlParts.length - 1];
-      const filePath = `products/${fileName}`;
+      const filePath = `${folder}/${fileName}`;
+
+      console.log('Deleting from Supabase Storage:', { bucket, filePath });
 
       const { error } = await supabase.storage
         .from(bucket)
         .remove([filePath]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
+
+      console.log('File deleted successfully');
     } catch (err) {
       console.error('Error deleting image:', err);
       throw err;

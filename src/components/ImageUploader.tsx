@@ -1,26 +1,31 @@
 import React, { useState } from 'react';
-import { Upload, X, Check, AlertCircle } from 'lucide-react';
+import { Upload, X, Check, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface ImageUploaderProps {
   onImageUploaded: (url: string) => void;
   maxImages?: number;
   currentImages?: string[];
+  className?: string;
 }
 
 export function ImageUploader({ 
   onImageUploaded, 
   maxImages = 10, 
-  currentImages = [] 
+  currentImages = [],
+  className = ''
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const uploadToSupabase = async (file: File): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `products/${fileName}`;
+
+    console.log('Uploading to Supabase Storage:', filePath);
 
     const { data, error } = await supabase.storage
       .from('product-images')
@@ -29,56 +34,23 @@ export function ImageUploader({
         upsert: false
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase upload error:', error);
+      throw error;
+    }
+
+    console.log('Upload successful:', data);
 
     const { data: { publicUrl } } = supabase.storage
       .from('product-images')
       .getPublicUrl(filePath);
 
+    console.log('Public URL:', publicUrl);
     return publicUrl;
   };
 
-  const uploadToCloudinary = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'your_upload_preset'); // Нужно настроить
-    formData.append('cloud_name', 'your_cloud_name'); // Нужно настроить
-
-    const response = await fetch(
-      'https://api.cloudinary.com/v1_1/your_cloud_name/image/upload',
-      {
-        method: 'POST',
-        body: formData,
-      }
-    );
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'Upload failed');
-    
-    return data.secure_url;
-  };
-
-  const uploadToImgBB = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('image', file);
-
-    const response = await fetch(
-      `https://api.imgbb.com/1/upload?key=YOUR_IMGBB_API_KEY`, // Нужно настроить
-      {
-        method: 'POST',
-        body: formData,
-      }
-    );
-
-    const data = await response.json();
-    if (!data.success) throw new Error(data.error?.message || 'Upload failed');
-    
-    return data.data.url;
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+  const handleFileUpload = async (files: FileList) => {
+    if (files.length === 0) return;
 
     if (currentImages.length + files.length > maxImages) {
       setError(`Максимум ${maxImages} изображений`);
@@ -93,9 +65,9 @@ export function ImageUploader({
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         
-        // Проверяем размер файла (макс 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          throw new Error(`Файл ${file.name} слишком большой (макс 5MB)`);
+        // Проверяем размер файла (макс 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error(`Файл ${file.name} слишком большой (макс 10MB)`);
         }
 
         // Проверяем тип файла
@@ -103,39 +75,68 @@ export function ImageUploader({
           throw new Error(`Файл ${file.name} не является изображением`);
         }
 
-        setUploadProgress((i / files.length) * 100);
+        setUploadProgress(((i + 1) / files.length) * 100);
 
-        // Пробуем загрузить в Supabase (основной вариант)
-        let imageUrl: string;
-        try {
-          imageUrl = await uploadToSupabase(file);
-        } catch (supabaseError) {
-          console.warn('Supabase upload failed, trying ImgBB:', supabaseError);
-          // Fallback на ImgBB
-          imageUrl = await uploadToImgBB(file);
-        }
-
+        const imageUrl = await uploadToSupabase(file);
         onImageUploaded(imageUrl);
       }
 
       setUploadProgress(100);
+      setTimeout(() => setUploadProgress(0), 1000);
     } catch (err) {
       console.error('Upload error:', err);
       setError(err instanceof Error ? err.message : 'Ошибка загрузки');
     } finally {
       setUploading(false);
-      setUploadProgress(0);
     }
   };
 
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      handleFileUpload(files);
+    }
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setDragOver(false);
+    
+    const files = event.dataTransfer.files;
+    if (files) {
+      handleFileUpload(files);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setDragOver(false);
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+    <div className={`space-y-4 ${className}`}>
+      <div 
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+          dragOver 
+            ? 'border-blue-400 bg-blue-50' 
+            : uploading || currentImages.length >= maxImages
+            ? 'border-gray-200 bg-gray-50'
+            : 'border-gray-300 hover:border-gray-400'
+        }`}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
         <input
           type="file"
           multiple
           accept="image/*"
-          onChange={handleFileUpload}
+          onChange={handleInputChange}
           disabled={uploading || currentImages.length >= maxImages}
           className="hidden"
           id="image-upload"
@@ -158,12 +159,18 @@ export function ImageUploader({
             </>
           ) : (
             <>
-              <Upload className="h-8 w-8 text-gray-400" />
+              <div className="flex items-center space-x-2">
+                <Upload className="h-8 w-8 text-gray-400" />
+                <ImageIcon className="h-8 w-8 text-gray-400" />
+              </div>
               <span className="text-sm text-gray-600">
-                Нажмите для загрузки изображений
+                {dragOver 
+                  ? 'Отпустите файлы для загрузки'
+                  : 'Перетащите изображения или нажмите для выбора'
+                }
               </span>
               <span className="text-xs text-gray-500">
-                PNG, JPG, WebP до 5MB ({currentImages.length}/{maxImages})
+                PNG, JPG, WebP до 10MB ({currentImages.length}/{maxImages})
               </span>
             </>
           )}
@@ -172,23 +179,47 @@ export function ImageUploader({
 
       {error && (
         <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
-          <AlertCircle className="h-4 w-4" />
-          <span className="text-sm">{error}</span>
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span className="text-sm flex-1">{error}</span>
           <button
             onClick={() => setError(null)}
-            className="ml-auto"
+            className="text-red-400 hover:text-red-600"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
       )}
 
-      {uploading && (
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${uploadProgress}%` }}
-          />
+      {uploading && uploadProgress > 0 && (
+        <div className="space-y-2">
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-600 text-center">
+            Загружено {Math.round(uploadProgress)}%
+          </p>
+        </div>
+      )}
+
+      {currentImages.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {currentImages.slice(0, 6).map((url, index) => (
+            <div key={index} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+              <img
+                src={url}
+                alt={`Изображение ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ))}
+          {currentImages.length > 6 && (
+            <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+              <span className="text-sm text-gray-500">+{currentImages.length - 6}</span>
+            </div>
+          )}
         </div>
       )}
     </div>
