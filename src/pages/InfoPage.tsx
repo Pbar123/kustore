@@ -6,7 +6,7 @@ export function InfoPage() {
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Информация о магазине</h1>
-        <p className="text-lg text-gray-600">Все что нужно знать о KUSTORE</p>
+        <p className="text-lg text-gray-600">Все что нужно знать о МОНОЛИТ</p>
       </div>
 
       <div className="space-y-8">
@@ -18,7 +18,7 @@ export function InfoPage() {
           </div>
           <div className="prose text-gray-600">
             <p className="mb-4">
-              KUSTORE — это современный интернет-магазин минималистичной одежды. 
+              МОНОЛИТ — это современный интернет-магазин минималистичной одежды. 
               Мы предлагаем качественные вещи в стиле минимализм для тех, кто ценит 
               простоту, комфорт и элегантность.
             </p>

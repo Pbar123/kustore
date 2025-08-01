@@ -1,7 +1,7 @@
 {
-  "name": "kustore-telegram-admin-bot",
+  "name": "monolit-telegram-admin-bot",
   "version": "1.0.0",
-  "description": "Telegram bot for managing KUSTORE products",
+  "description": "Telegram bot for managing MONOLIT products",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js",
@@ -16,6 +16,6 @@
     "nodemon": "^3.0.2"
   },
   "keywords": ["telegram", "bot", "ecommerce", "admin"],
-  "author": "KUSTORE",
+  "author": "МОНОЛИТ",
   "license": "MIT"
 }

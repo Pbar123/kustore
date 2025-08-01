@@ -44,7 +44,7 @@ export function HomePage() {
 
         {/* Приветствие */}
         <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Добро пожаловать в KUSTORE</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Добро пожаловать в МОНОЛИТ</h1>
           <p className="text-lg text-gray-600">Минималистичная одежда для современного стиля</p>
         </div>
 
@@ -108,6 +108,7 @@ export function HomePage() {
         <div className="bg-gray-50 rounded-lg p-8 mb-8">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">О магазине KUSTORE</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">О магазине МОНОЛИТ</h2>
             
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">

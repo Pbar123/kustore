@@ -287,7 +287,7 @@ bot.onText(/\/start/, (msg) => {
   }
   
   bot.sendMessage(chatId, 
-    '🛍️ *Добро пожаловать в панель управления KUSTORE!*\n\n' +
+    '🛍️ *Добро пожаловать в панель управления МОНОЛИТ!*\n\n' +
     'Выберите действие:', 
     { ...getMainMenu(), parse_mode: 'Markdown' }
   );
@@ -421,11 +421,11 @@ async function handleAddProductState(chatId, text, userState) {
         product.color = text;
       }
       userState.state = ADD_PRODUCT_STATES.WAITING_BRAND;
-      bot.sendMessage(chatId, '🏷️ Введите бренд (по умолчанию "KUSTORE"):');
+      bot.sendMessage(chatId, '🏷️ Введите бренд (по умолчанию "МОНОЛИТ"):');
       break;
       
     case ADD_PRODUCT_STATES.WAITING_BRAND:
-      product.brand = text === 'нет' ? 'KUSTORE' : text;
+      product.brand = text === 'нет' ? 'МОНОЛИТ' : text;
       userState.state = ADD_PRODUCT_STATES.WAITING_DESCRIPTION;
       bot.sendMessage(chatId, '📝 Введите описание товара:');
       break;
