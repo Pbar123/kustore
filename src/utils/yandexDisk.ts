@@ -160,5 +160,3 @@ export function createImageFallbacks(originalUrl: string): string[] {
   // Убираем дубликаты
   return [...new Set(fallbacks)];
 }
-  return fallbacks;
-}
