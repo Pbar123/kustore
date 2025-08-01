@@ -43,14 +43,13 @@ export function YandexDiskImage({
     setHasError(false);
     setFallbackIndex(0);
     
-    // Обрабатываем URL если это Яндекс.Диск и не нужно сохранять оригинал
-    if (isYandexDiskUrl(src) && !preserveOriginal) {
-      // Пробуем получить прямую ссылку через API
-      fetchYandexDiskImage(src);
-    } else {
-      console.log('YandexDiskImage: Using original URL:', src);
-      setCurrentSrc(src);
-    }
+    // Всегда используем прямое преобразование URL
+    const processedUrl = isYandexDiskUrl(src) && !preserveOriginal 
+      ? getYandexDiskDirectUrl(src) 
+      : src;
+    
+    console.log('YandexDiskImage: Using processed URL:', processedUrl);
+    setCurrentSrc(processedUrl);
   }, [src, preserveOriginal]);
 
   const fetchYandexDiskImage = async (originalUrl: string) => {
@@ -88,7 +87,8 @@ export function YandexDiskImage({
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error(`YandexDiskImage: Ошибка загрузки изображения: ${currentSrc}`);
     console.error('YandexDiskImage: Fallback URLs:', fallbackUrls);
-    console.error('YandexDiskImage: Error details:', e.currentTarget.src);
+    console.error('YandexDiskImage: Failed URL:', e.currentTarget.src);
+    console.error('YandexDiskImage: Error event:', e.nativeEvent);
     
     // Пробуем следующий fallback URL
     if (fallbackIndex < fallbackUrls.length - 1) {
