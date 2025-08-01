@@ -122,11 +122,13 @@ export function processImageUrls(imageUrls: string[], preserveOriginal: boolean 
  * @returns массив URL с резервными вариантами
  */
 export function createImageFallbacks(originalUrl: string): string[] {
+  console.log('createImageFallbacks: Creating fallbacks for:', originalUrl);
   const fallbacks = [originalUrl];
   
   if (isYandexDiskUrl(originalUrl)) {
     // Если это уже прямая ссылка downloader.disk.yandex.ru, добавляем альтернативы
     if (originalUrl.includes('downloader.disk.yandex.ru')) {
+      console.log('createImageFallbacks: Processing downloader.disk.yandex.ru URL');
       // Пробуем разные параметры для прямой ссылки
       const baseUrl = originalUrl.split('?')[0];
       fallbacks.push(
@@ -134,12 +136,14 @@ export function createImageFallbacks(originalUrl: string): string[] {
         `${baseUrl}?disposition=inline`, // Без лишних параметров
         originalUrl.replace('&disposition=inline', ''), // Убираем disposition
         originalUrl.replace('preview', 'download'), // Меняем preview на download
+        baseUrl, // Совсем без параметров
       );
     } else {
       // Для обычных ссылок disk.yandex.ru/i/
       const fileId = originalUrl.includes('/i/') ? originalUrl.split('/i/')[1].split('?')[0] : '';
       
       if (fileId) {
+        console.log('createImageFallbacks: Processing disk.yandex.ru/i/ URL with fileId:', fileId);
         fallbacks.push(
           // Разные способы получения изображения
           `https://disk.yandex.ru/i/${fileId}?inline=1`,
@@ -154,9 +158,12 @@ export function createImageFallbacks(originalUrl: string): string[] {
     // Финальный placeholder
     fallbacks.push('/images/products/placeholder.jpg');
   } else {
+    console.log('createImageFallbacks: Not a Yandex Disk URL, using simple fallback');
     fallbacks.push('/images/products/placeholder.jpg');
   }
   
   // Убираем дубликаты
-  return [...new Set(fallbacks)];
+  const uniqueFallbacks = [...new Set(fallbacks)];
+  console.log('createImageFallbacks: Final fallbacks:', uniqueFallbacks);
+  return uniqueFallbacks;
 }

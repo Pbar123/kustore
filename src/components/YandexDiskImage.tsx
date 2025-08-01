@@ -20,6 +20,8 @@ export function YandexDiskImage({
   fallbackSrc = '/images/products/placeholder.jpg',
   preserveOriginal = false
 }: YandexDiskImageProps) {
+  console.log('YandexDiskImage: Component rendered with src:', src);
+  
   const [currentSrc, setCurrentSrc] = useState<string>('');
   const [fallbackIndex, setFallbackIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,10 +29,15 @@ export function YandexDiskImage({
 
   // Создаем список fallback URL
   const fallbackUrls = React.useMemo(() => {
+    console.log('YandexDiskImage: Creating fallback URLs for:', src);
     if (isYandexDiskUrl(src) && !preserveOriginal) {
-      return createImageFallbacks(src);
+      const fallbacks = createImageFallbacks(src);
+      console.log('YandexDiskImage: Generated fallbacks:', fallbacks);
+      return fallbacks;
     }
-    return [src, fallbackSrc];
+    const simpleFallbacks = [src, fallbackSrc];
+    console.log('YandexDiskImage: Using simple fallbacks:', simpleFallbacks);
+    return simpleFallbacks;
   }, [src, fallbackSrc, preserveOriginal]);
 
   useEffect(() => {
@@ -83,19 +90,30 @@ export function YandexDiskImage({
     onLoad?.(e);
   };
 
+  console.log('YandexDiskImage: Current state:', {
+    currentSrc,
+    isLoading,
+    hasError,
+    fallbackIndex
+  });
   // Показываем placeholder во время загрузки
   if (isLoading && !hasError) {
+    console.log('YandexDiskImage: Showing loading placeholder');
     return (
       <div className={`bg-gray-200 animate-pulse flex items-center justify-center ${className}`}>
+        <div className="text-center">
+          <div className="text-xs text-gray-500 mb-1">Загрузка...</div>
         <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
         </svg>
+        </div>
       </div>
     );
   }
 
   // Если все fallback'и не сработали, показываем placeholder с ошибкой
   if (hasError) {
+    console.log('YandexDiskImage: Showing error placeholder');
     return (
       <div className={`bg-red-100 flex items-center justify-center ${className}`}>
         <div className="text-center p-2">
@@ -108,6 +126,7 @@ export function YandexDiskImage({
     );
   }
 
+  console.log('YandexDiskImage: Rendering img element with src:', currentSrc);
   return (
     <img
       src={currentSrc}
