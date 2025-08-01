@@ -24,7 +24,6 @@ export function YandexDiskImage({
   const [fallbackIndex, setFallbackIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [apiUrl, setApiUrl] = useState<string>('');
 
   // Создаем список fallback URL
   const fallbackUrls = React.useMemo(() => {
@@ -38,57 +37,26 @@ export function YandexDiskImage({
     console.log('YandexDiskImage: Loading image:', src);
     console.log('YandexDiskImage: Is Yandex Disk URL:', isYandexDiskUrl(src));
     console.log('YandexDiskImage: Preserve original:', preserveOriginal);
+    console.log('YandexDiskImage: Fallback URLs:', fallbackUrls);
     
     setIsLoading(true);
     setHasError(false);
     setFallbackIndex(0);
     
-    // Всегда используем прямое преобразование URL
-    const processedUrl = isYandexDiskUrl(src) && !preserveOriginal 
-      ? getYandexDiskDirectUrl(src) 
-      : src;
-    
-    console.log('YandexDiskImage: Using processed URL:', processedUrl);
-    setCurrentSrc(processedUrl);
+    // Используем первый URL из fallback списка
+    console.log('YandexDiskImage: Using first fallback URL:', fallbackUrls[0]);
+    setCurrentSrc(fallbackUrls[0]);
   }, [src, preserveOriginal]);
 
-  const fetchYandexDiskImage = async (originalUrl: string) => {
-    try {
-      console.log('YandexDiskImage: Fetching direct URL for:', originalUrl);
-      
-      // Пробуем получить прямую ссылку через API
-      const apiUrl = `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(originalUrl)}`;
-      console.log('YandexDiskImage: API URL:', apiUrl);
-      
-      const response = await fetch(apiUrl);
-      if (response.ok) {
-        const data = await response.json();
-        console.log('YandexDiskImage: API response:', data);
-        if (data.href) {
-          console.log('YandexDiskImage: Got direct URL:', data.href);
-          setCurrentSrc(data.href);
-          return;
-        }
-      }
-      
-      // Если API не сработал, используем fallback методы
-      console.log('YandexDiskImage: API failed, using fallback');
-      const processedUrl = getYandexDiskDirectUrl(originalUrl);
-      console.log('YandexDiskImage: Fallback URL:', processedUrl);
-      setCurrentSrc(processedUrl);
-      
-    } catch (error) {
-      console.error('YandexDiskImage: Error fetching direct URL:', error);
-      // В случае ошибки используем обычную обработку
-      const processedUrl = getYandexDiskDirectUrl(originalUrl);
-      setCurrentSrc(processedUrl);
-    }
-  };
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error(`YandexDiskImage: Ошибка загрузки изображения: ${currentSrc}`);
     console.error('YandexDiskImage: Fallback URLs:', fallbackUrls);
     console.error('YandexDiskImage: Failed URL:', e.currentTarget.src);
-    console.error('YandexDiskImage: Error event:', e.nativeEvent);
+    
+    // Получаем детали ошибки
+    const img = e.currentTarget;
+    console.error('YandexDiskImage: Image natural dimensions:', img.naturalWidth, 'x', img.naturalHeight);
+    console.error('YandexDiskImage: Image complete:', img.complete);
     
     // Пробуем следующий fallback URL
     if (fallbackIndex < fallbackUrls.length - 1) {
@@ -108,6 +76,8 @@ export function YandexDiskImage({
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.log('YandexDiskImage: Image loaded successfully:', currentSrc);
+    const img = e.currentTarget;
+    console.log('YandexDiskImage: Image dimensions:', img.naturalWidth, 'x', img.naturalHeight);
     setIsLoading(false);
     setHasError(false);
     onLoad?.(e);
@@ -124,6 +94,20 @@ export function YandexDiskImage({
     );
   }
 
+  // Если все fallback'и не сработали, показываем placeholder с ошибкой
+  if (hasError) {
+    return (
+      <div className={`bg-red-100 flex items-center justify-center ${className}`}>
+        <div className="text-center p-2">
+          <svg className="w-8 h-8 text-red-400 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+          </svg>
+          <div className="text-xs text-red-600">Ошибка загрузки</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <img
       src={currentSrc}
@@ -132,6 +116,7 @@ export function YandexDiskImage({
       onError={handleImageError}
       onLoad={handleImageLoad}
       loading="lazy"
+      crossOrigin="anonymous"
     />
   );
 }

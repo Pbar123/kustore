@@ -125,24 +125,40 @@ export function createImageFallbacks(originalUrl: string): string[] {
   const fallbacks = [originalUrl];
   
   if (isYandexDiskUrl(originalUrl)) {
-    // Добавляем разные способы получения изображения из Яндекс.Диска
-    const fileId = originalUrl.includes('/i/') ? originalUrl.split('/i/')[1] : '';
+    // Если это уже прямая ссылка downloader.disk.yandex.ru, добавляем альтернативы
+    if (originalUrl.includes('downloader.disk.yandex.ru')) {
+      // Пробуем разные параметры для прямой ссылки
+      const baseUrl = originalUrl.split('?')[0];
+      fallbacks.push(
+        originalUrl, // Оригинальная ссылка
+        `${baseUrl}?disposition=inline`, // Без лишних параметров
+        originalUrl.replace('&disposition=inline', ''), // Убираем disposition
+        originalUrl.replace('preview', 'download'), // Меняем preview на download
+      );
+    } else {
+      // Для обычных ссылок disk.yandex.ru/i/
+      const fileId = originalUrl.includes('/i/') ? originalUrl.split('/i/')[1].split('?')[0] : '';
+      
+      if (fileId) {
+        fallbacks.push(
+          // Разные способы получения изображения
+          `https://disk.yandex.ru/i/${fileId}?inline=1`,
+          `https://yadi.sk/i/${fileId}`,
+          `https://disk.yandex.ru/i/${fileId}`,
+          // Попытка через API
+          `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${encodeURIComponent(originalUrl)}`,
+        );
+      }
+    }
     
-    fallbacks.push(
-      // Прямая ссылка с inline параметром
-      `https://disk.yandex.ru/i/${fileId}?inline=1`,
-      // Альтернативная прямая ссылка
-      `https://yadi.sk/i/${fileId}`,
-      // Попытка через старый API
-      `https://downloader.disk.yandex.ru/preview?url=ya-disk-public%3A%2F%2F${fileId}&name=image&size=L`,
-      // Оригинальная ссылка
-      originalUrl,
-      // Финальный placeholder
-      '/images/products/placeholder.jpg' // Финальный fallback
-    );
+    // Финальный placeholder
+    fallbacks.push('/images/products/placeholder.jpg');
   } else {
     fallbacks.push('/images/products/placeholder.jpg');
   }
   
+  // Убираем дубликаты
+  return [...new Set(fallbacks)];
+}
   return fallbacks;
 }
