@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Phone, MapPin, Clock, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { Package, Phone, MapPin, Clock, CheckCircle, XCircle, Eye, Settings } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Order } from '../types';
 import { ProtectedRoute } from '../components/ProtectedRoute';
+import { StorageTestComponent } from '../components/StorageTestComponent';
 
 export function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [activeTab, setActiveTab] = useState<'orders' | 'storage'>('orders');
 
   useEffect(() => {
     fetchOrders();
@@ -102,87 +104,120 @@ export function AdminPage() {
     <ProtectedRoute>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление заказами</h1>
-          <p className="text-gray-600">Всего заказов: {orders.length}</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Админ-панель</h1>
+          
+          {/* Tabs */}
+          <div className="flex space-x-1 mb-8 bg-gray-100 p-1 rounded-lg w-fit">
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'orders'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Package className="h-4 w-4 inline mr-2" />
+              Заказы ({orders.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('storage')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'storage'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Settings className="h-4 w-4 inline mr-2" />
+              Настройка Storage
+            </button>
+          </div>
         </div>
 
-        {orders.length === 0 ? (
-          <div className="text-center py-12">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">Заказов пока нет</p>
-          </div>
-        ) : (
-          <div className="grid gap-6">
-            {orders.map((order) => (
-              <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Заказ #{order.id.slice(-8)}
-                    </h3>
-                    <p className="text-sm text-gray-600 flex items-center mt-1">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {new Date(order.created_at).toLocaleString('ru-RU')}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                      {getStatusText(order.status)}
-                    </span>
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Клиент</h4>
-                    <p className="text-sm text-gray-600">{order.customer_name}</p>
-                    <p className="text-sm text-gray-600 flex items-center">
-                      <Phone className="h-4 w-4 mr-1" />
-                      {order.customer_phone}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Доставка</h4>
-                    <p className="text-sm text-gray-600">{getDeliveryMethodName(order.delivery_method)}</p>
-                    <p className="text-sm text-gray-600 flex items-start">
-                      <MapPin className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
-                      <span className="line-clamp-2">{order.delivery_address}</span>
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Сумма</h4>
-                    <p className="text-lg font-semibold text-gray-900">{order.total_amount} руб.</p>
-                    <p className="text-sm text-gray-600">Товаров: {order.items.length}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {['confirmed', 'paid', 'shipped', 'delivered', 'cancelled'].map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => updateOrderStatus(order.id, status as Order['status'])}
-                      disabled={order.status === status}
-                      className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                        order.status === status
-                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {getStatusText(status as Order['status'])}
-                    </button>
-                  ))}
-                </div>
+        {activeTab === 'orders' && (
+          <>
+            {orders.length === 0 ? (
+              <div className="text-center py-12">
+                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 text-lg">Заказов пока нет</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="grid gap-6">
+                {orders.map((order) => (
+                  <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Заказ #{order.id.slice(-8)}
+                        </h3>
+                        <p className="text-sm text-gray-600 flex items-center mt-1">
+                          <Clock className="h-4 w-4 mr-1" />
+                          {new Date(order.created_at).toLocaleString('ru-RU')}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                          {getStatusText(order.status)}
+                        </span>
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          <Eye className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-4 mb-4">
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2">Клиент</h4>
+                        <p className="text-sm text-gray-600">{order.customer_name}</p>
+                        <p className="text-sm text-gray-600 flex items-center">
+                          <Phone className="h-4 w-4 mr-1" />
+                          {order.customer_phone}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2">Доставка</h4>
+                        <p className="text-sm text-gray-600">{getDeliveryMethodName(order.delivery_method)}</p>
+                        <p className="text-sm text-gray-600 flex items-start">
+                          <MapPin className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
+                          <span className="line-clamp-2">{order.delivery_address}</span>
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2">Сумма</h4>
+                        <p className="text-lg font-semibold text-gray-900">{order.total_amount} руб.</p>
+                        <p className="text-sm text-gray-600">Товаров: {order.items.length}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {['confirmed', 'paid', 'shipped', 'delivered', 'cancelled'].map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => updateOrderStatus(order.id, status as Order['status'])}
+                          disabled={order.status === status}
+                          className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                            order.status === status
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {getStatusText(status as Order['status'])}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === 'storage' && (
+          <StorageTestComponent />
         )}
 
         {/* Модальное окно с деталями заказа */}
